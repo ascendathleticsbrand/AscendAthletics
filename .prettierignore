@@ -1,0 +1,14 @@
+# Dependencies and generated build files
+node_modules/
+.next/
+out/
+coverage/
+next-env.d.ts
+*.tsbuildinfo
+package-lock.json
+
+# Private configuration, original assets and historical database migrations
+.env*
+public/
+/supabase/
+*.log

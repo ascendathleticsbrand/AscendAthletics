@@ -1,0 +1,113 @@
+{
+  "imported_at": "2026-10-14",
+  "products": [
+    {
+      "id": "b674d10e-0975-45aa-8e7d-a93002eeb245",
+      "slug": "red-graphic-compression-shirt",
+      "storage_path": "b674d10e-0975-45aa-8e7d-a93002eeb245/c4561f6e-cc6f-6d15-21cb-001c4daa0853.jpg",
+      "alt": "Black compression shirt with red graphic artwork, front and back views",
+      "source": "public/products/compression-shirts/black-red-graphic-compression-shirt.jpg",
+      "original_preserved": true,
+      "name": "Red Graphic Compression Shirt",
+      "price_ngn": 17000,
+      "variants": [
+        {
+          "sku": "ASC-COMP-RED-L",
+          "size": "L",
+          "color": "Black",
+          "available_quantity": 3
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "aeb501b9-6565-443c-a6ae-db062263cd49",
+      "slug": "white-graphic-compression-shirt",
+      "storage_path": "aeb501b9-6565-443c-a6ae-db062263cd49/970ef822-69e5-eac5-9679-d5d658f345c9.jpg",
+      "alt": "Black compression shirt with white graphic artwork, front and back views",
+      "source": "public/products/compression-shirts/black-white-graphic-compression-shirt.jpg",
+      "original_preserved": true,
+      "name": "White Graphic Compression Shirt",
+      "price_ngn": 17000,
+      "variants": [
+        {
+          "sku": "ASC-COMP-WHITE-L",
+          "size": "L",
+          "color": "Black",
+          "available_quantity": 3
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "c250383f-9d1a-4b41-8163-4dd245b6e167",
+      "slug": "cross-graphic-compression-shirt",
+      "storage_path": "c250383f-9d1a-4b41-8163-4dd245b6e167/b6e12916-f3b7-53e6-b2ca-8aa37e123a0b.jpg",
+      "alt": "Black compression shirt with a cross and winged cross artwork, front and back views",
+      "source": "public/products/compression-shirts/black-cross-graphic-compression-shirt.jpg",
+      "original_preserved": true,
+      "name": "Cross Graphic Compression Shirt",
+      "price_ngn": 17000,
+      "variants": [
+        {
+          "sku": "ASC-COMP-CROSS-L",
+          "size": "L",
+          "color": "Black",
+          "available_quantity": 3
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "7c266247-180e-420e-8fdf-41eb4fbf6e87",
+      "slug": "layered-training-shorts",
+      "storage_path": "7c266247-180e-420e-8fdf-41eb4fbf6e87/97781a6a-517f-e2a8-819f-f5f8c9e038b1.jpg",
+      "alt": "Black, white and blue layered training shorts with drawstring waists",
+      "source": "public/products/shorts/layered-training-shorts.jpg",
+      "original_preserved": true,
+      "name": "Layered Training Shorts (Per Pair)",
+      "price_ngn": 15000,
+      "variants": [
+        {
+          "sku": "ASC-SHORT-BLACK-L",
+          "size": "L",
+          "color": "Black",
+          "available_quantity": 1
+        },
+        {
+          "sku": "ASC-SHORT-WHITE-L",
+          "size": "L",
+          "color": "White",
+          "available_quantity": 1
+        },
+        {
+          "sku": "ASC-SHORT-BLUE-L",
+          "size": "L",
+          "color": "Blue",
+          "available_quantity": 1
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "b9b2553e-b6cc-409b-a184-fc18a21a529d",
+      "slug": "black-lever-lifting-belt",
+      "storage_path": "b9b2553e-b6cc-409b-a184-fc18a21a529d/a866d918-3e9b-7abb-9206-8fb8efaf8bc0.jpg",
+      "alt": "Black lifting belt with a lever buckle",
+      "source": "public/products/gym-accessories/black-lever-lifting-belt.jpg",
+      "original_preserved": true,
+      "name": "Black Lever Lifting Belt",
+      "price_ngn": 70000,
+      "variants": [
+        {
+          "sku": "ASC-BELT-BLACK-OS",
+          "size": "One Size",
+          "color": "Black",
+          "available_quantity": 3
+        }
+      ],
+      "status": "active"
+    }
+  ],
+  "stock_confirmation": "Owner supplied 3 units per product; all clothing Large; shorts sold per pair with one Black, one White and one Blue unit; belt One Size."
+}

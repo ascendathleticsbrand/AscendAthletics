@@ -1,0 +1,756 @@
+{
+  "reportDate": "2026-10-25",
+  "origin": "http://localhost:3000",
+  "httpCapturedAt": "2026-10-25T17:27:33.973Z",
+  "databaseCapturedAt": "2026-10-25T17:27:38.586Z",
+  "browserAvailable": false,
+  "noWriteBoundary": "Anonymous GET/HEAD only; no credentials, forms, private order API, cron or writes.",
+  "ownerDecision": {
+    "whatsappAutomation": "paused",
+    "providerConnection": "not authorized while paused",
+    "testOrCustomerMessagesSent": 0
+  },
+  "checks": {
+    "sourceBaselineDate": "2026-10-19",
+    "protectedFiles": 183,
+    "changed": [],
+    "missing": [],
+    "addedProtectedFiles": [],
+    "automatedChecks": {
+      "observedDate": "2026-10-19",
+      "formatCheck": "passed",
+      "typecheck": "passed",
+      "vitest": {
+        "passedTests": 153,
+        "testFiles": 21
+      },
+      "revalidatedSourceUnchangedOn": "2026-10-25"
+    },
+    "notRun": [
+      "test:smoke",
+      "test:db",
+      "live account/order/payment/upload/message actions",
+      "GET /api/cron"
+    ],
+    "baselineExclusions": [
+      "Installed/generated dependency trees, including supabase/.test-runtime, and Next output; these were not part of the original baseline."
+    ],
+    "unbaselinedGeneratedDependencyFilesExcluded": 309
+  },
+  "pageProbes": [
+    {
+      "path": "/",
+      "status": 200,
+      "redirect": null,
+      "title": "ASCEND ATHLETICS | RISE. PUSH. BECOME.",
+      "htmlBytes": 53365,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/shop",
+      "status": 200,
+      "redirect": null,
+      "title": "Merchandise | ASCEND ATHLETICS",
+      "htmlBytes": 38001,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/shop?category=compression-shirts",
+      "status": 200,
+      "redirect": null,
+      "title": "Merchandise | ASCEND ATHLETICS",
+      "htmlBytes": 35691,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/shop?category=shorts",
+      "status": 200,
+      "redirect": null,
+      "title": "Merchandise | ASCEND ATHLETICS",
+      "htmlBytes": 34627,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/shop?category=gym-accessories",
+      "status": 200,
+      "redirect": null,
+      "title": "Merchandise | ASCEND ATHLETICS",
+      "htmlBytes": 36047,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/shop?category=supplements",
+      "status": 200,
+      "redirect": null,
+      "title": "Merchandise | ASCEND ATHLETICS",
+      "htmlBytes": 36140,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/collections",
+      "status": 200,
+      "redirect": null,
+      "title": "Collections &amp; product drops | ASCEND ATHLETICS",
+      "htmlBytes": 30351,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/coaching",
+      "status": 200,
+      "redirect": null,
+      "title": "Personal training | ASCEND ATHLETICS",
+      "htmlBytes": 36912,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/about",
+      "status": 200,
+      "redirect": null,
+      "title": "Our story | ASCEND ATHLETICS",
+      "htmlBytes": 27552,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/contact",
+      "status": 200,
+      "redirect": null,
+      "title": "Contact | ASCEND ATHLETICS",
+      "htmlBytes": 29011,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/faq",
+      "status": 200,
+      "redirect": null,
+      "title": "Questions &amp; answers | ASCEND ATHLETICS",
+      "htmlBytes": 31206,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/privacy",
+      "status": 200,
+      "redirect": null,
+      "title": "Privacy notice | ASCEND ATHLETICS",
+      "htmlBytes": 29853,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": true,
+      "emptyCart": false
+    },
+    {
+      "path": "/terms",
+      "status": 200,
+      "redirect": null,
+      "title": "Terms of service | ASCEND ATHLETICS",
+      "htmlBytes": 28243,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": true,
+      "emptyCart": false
+    },
+    {
+      "path": "/returns",
+      "status": 200,
+      "redirect": null,
+      "title": "Refunds &amp; returns | ASCEND ATHLETICS",
+      "htmlBytes": 27560,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": true,
+      "emptyCart": false
+    },
+    {
+      "path": "/account",
+      "status": 200,
+      "redirect": null,
+      "title": "Coaching account | ASCEND ATHLETICS",
+      "htmlBytes": 26555,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/account?next=%2Fadmin",
+      "status": 200,
+      "redirect": null,
+      "title": "Coaching account | ASCEND ATHLETICS",
+      "htmlBytes": 26581,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/cart",
+      "status": 200,
+      "redirect": null,
+      "title": "Your bag | ASCEND ATHLETICS",
+      "htmlBytes": 25079,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/checkout",
+      "status": 200,
+      "redirect": null,
+      "title": "Checkout | ASCEND ATHLETICS",
+      "htmlBytes": 25825,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/order-status",
+      "status": 200,
+      "redirect": null,
+      "title": "Order status | ASCEND ATHLETICS",
+      "htmlBytes": 26404,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/robots.txt",
+      "status": 200,
+      "redirect": null,
+      "title": null,
+      "htmlBytes": 27,
+      "robots": [],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/sitemap.xml",
+      "status": 200,
+      "redirect": null,
+      "title": null,
+      "htmlBytes": 110,
+      "robots": [],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/audit-nonexistent-route",
+      "status": 404,
+      "redirect": null,
+      "title": "ASCEND ATHLETICS | RISE. PUSH. BECOME.",
+      "htmlBytes": 14564,
+      "robots": [
+        "noindex",
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/shop/audit-nonexistent-product",
+      "status": 200,
+      "redirect": null,
+      "title": "Product unavailable | ASCEND ATHLETICS",
+      "htmlBytes": 35950,
+      "robots": [
+        "noindex, nofollow",
+        "noindex"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/collections/audit-nonexistent-collection",
+      "status": 200,
+      "redirect": null,
+      "title": "Collection unavailable | ASCEND ATHLETICS",
+      "htmlBytes": 38265,
+      "robots": [
+        "noindex",
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/orders/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "status": 404,
+      "redirect": null,
+      "title": "ASCEND ATHLETICS | RISE. PUSH. BECOME.",
+      "htmlBytes": 14616,
+      "robots": [
+        "noindex",
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/admin",
+      "status": 307,
+      "redirect": "/account?next=/admin",
+      "title": "Business workspace | ASCEND ATHLETICS | ASCEND ATHLETICS",
+      "htmlBytes": 18809,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/admin/products",
+      "status": 307,
+      "redirect": "/account?next=/admin",
+      "title": "Business workspace | ASCEND ATHLETICS | ASCEND ATHLETICS",
+      "htmlBytes": 19507,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/admin/inventory",
+      "status": 307,
+      "redirect": "/account?next=/admin",
+      "title": "Business workspace | ASCEND ATHLETICS | ASCEND ATHLETICS",
+      "htmlBytes": 19511,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/admin/orders",
+      "status": 307,
+      "redirect": "/account?next=/admin",
+      "title": "Business workspace | ASCEND ATHLETICS | ASCEND ATHLETICS",
+      "htmlBytes": 19499,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/admin/customers",
+      "status": 307,
+      "redirect": "/account?next=/admin",
+      "title": "Business workspace | ASCEND ATHLETICS | ASCEND ATHLETICS",
+      "htmlBytes": 19511,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/admin/clients",
+      "status": 307,
+      "redirect": "/account?next=/admin",
+      "title": "Business workspace | ASCEND ATHLETICS | ASCEND ATHLETICS",
+      "htmlBytes": 19503,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/admin/packages",
+      "status": 307,
+      "redirect": "/account?next=/admin",
+      "title": "Business workspace | ASCEND ATHLETICS | ASCEND ATHLETICS",
+      "htmlBytes": 19507,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/admin/payments",
+      "status": 307,
+      "redirect": "/account?next=/admin",
+      "title": "Business workspace | ASCEND ATHLETICS | ASCEND ATHLETICS",
+      "htmlBytes": 19507,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/admin/finances",
+      "status": 307,
+      "redirect": "/account?next=/admin",
+      "title": "Business workspace | ASCEND ATHLETICS | ASCEND ATHLETICS",
+      "htmlBytes": 19507,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/admin/marketing",
+      "status": 307,
+      "redirect": "/account?next=/admin",
+      "title": "Business workspace | ASCEND ATHLETICS | ASCEND ATHLETICS",
+      "htmlBytes": 19511,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/admin/content",
+      "status": 307,
+      "redirect": "/account?next=/admin",
+      "title": "Business workspace | ASCEND ATHLETICS | ASCEND ATHLETICS",
+      "htmlBytes": 19503,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/admin/settings",
+      "status": 307,
+      "redirect": "/account?next=/admin",
+      "title": "Business workspace | ASCEND ATHLETICS | ASCEND ATHLETICS",
+      "htmlBytes": 19507,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/shop/red-graphic-compression-shirt",
+      "status": 200,
+      "redirect": null,
+      "title": "Red Graphic Compression Shirt | ASCEND ATHLETICS",
+      "htmlBytes": 35827,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/shop/white-graphic-compression-shirt",
+      "status": 200,
+      "redirect": null,
+      "title": "White Graphic Compression Shirt | ASCEND ATHLETICS",
+      "htmlBytes": 35564,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/shop/cross-graphic-compression-shirt",
+      "status": 200,
+      "redirect": null,
+      "title": "Cross Graphic Compression Shirt | ASCEND ATHLETICS",
+      "htmlBytes": 35940,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/shop/layered-training-shorts",
+      "status": 200,
+      "redirect": null,
+      "title": "Layered Training Shorts (Per Pair) | ASCEND ATHLETICS",
+      "htmlBytes": 33076,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    },
+    {
+      "path": "/shop/black-lever-lifting-belt",
+      "status": 200,
+      "redirect": null,
+      "title": "Black Lever Lifting Belt | ASCEND ATHLETICS",
+      "htmlBytes": 31570,
+      "robots": [
+        "noindex, nofollow"
+      ],
+      "policyAwaiting": false,
+      "emptyCart": false
+    }
+  ],
+  "callbackProbes": [
+    {
+      "path": "/auth/callback?next=%2Faccount",
+      "status": 307,
+      "redirect": "http://localhost:3000/account?auth_error=confirmation_failed&next=%2Faccount",
+      "noAuthCodeSupplied": true
+    }
+  ],
+  "assetChecks": [
+    {
+      "src": "/brand/ascend-icon.svg",
+      "status": 200,
+      "bytes": 61225
+    },
+    {
+      "src": "/brand/ascend-wordmark.svg",
+      "status": 200,
+      "bytes": 22284
+    },
+    {
+      "src": "/images/training-editorial.jpg",
+      "status": 200,
+      "bytes": 164945
+    },
+    {
+      "src": "/images/gym-editorial.jpg",
+      "status": 200,
+      "bytes": 494024
+    },
+    {
+      "src": "/brand/ascend-monogram.svg",
+      "status": 200,
+      "bytes": 104108
+    },
+    {
+      "src": "https://cjridqffhafmxeiiboru.supabase.co/storage/v1/object/public/product-images/b674d10e-0975-45aa-8e7d-a93002eeb245/c4561f6e-cc6f-6d15-21cb-001c4daa0853.jpg",
+      "status": 200,
+      "bytes": 62984
+    },
+    {
+      "src": "https://cjridqffhafmxeiiboru.supabase.co/storage/v1/object/public/product-images/aeb501b9-6565-443c-a6ae-db062263cd49/970ef822-69e5-eac5-9679-d5d658f345c9.jpg",
+      "status": 200,
+      "bytes": 106249
+    },
+    {
+      "src": "https://cjridqffhafmxeiiboru.supabase.co/storage/v1/object/public/product-images/c250383f-9d1a-4b41-8163-4dd245b6e167/b6e12916-f3b7-53e6-b2ca-8aa37e123a0b.jpg",
+      "status": 200,
+      "bytes": 72885
+    },
+    {
+      "src": "https://cjridqffhafmxeiiboru.supabase.co/storage/v1/object/public/product-images/7c266247-180e-420e-8fdf-41eb4fbf6e87/97781a6a-517f-e2a8-819f-f5f8c9e038b1.jpg",
+      "status": 200,
+      "bytes": 90008
+    },
+    {
+      "src": "https://cjridqffhafmxeiiboru.supabase.co/storage/v1/object/public/product-images/b9b2553e-b6cc-409b-a184-fc18a21a529d/a866d918-3e9b-7abb-9206-8fb8efaf8bc0.jpg",
+      "status": 200,
+      "bytes": 58830
+    }
+  ],
+  "database": {
+    "reportedDate": "2026-10-25",
+    "capturedAt": "2026-10-25T17:27:38.586Z",
+    "projectHost": "cjridqffhafmxeiiboru.supabase.co",
+    "source": "Service client SELECT only, no RPC or mutation",
+    "productsByStatus": {
+      "active": 5,
+      "coming_soon": 1
+    },
+    "stock": [
+      {
+        "slug": "cross-graphic-compression-shirt",
+        "status": "active",
+        "size": "L",
+        "color": "Black",
+        "onHand": 3,
+        "reserved": 0,
+        "available": 3,
+        "confirmed": true,
+        "overdueReserved": 0
+      },
+      {
+        "slug": "layered-training-shorts",
+        "status": "active",
+        "size": "L",
+        "color": "Black",
+        "onHand": 1,
+        "reserved": 0,
+        "available": 1,
+        "confirmed": true,
+        "overdueReserved": 0
+      },
+      {
+        "slug": "layered-training-shorts",
+        "status": "active",
+        "size": "L",
+        "color": "White",
+        "onHand": 1,
+        "reserved": 0,
+        "available": 1,
+        "confirmed": true,
+        "overdueReserved": 0
+      },
+      {
+        "slug": "layered-training-shorts",
+        "status": "active",
+        "size": "L",
+        "color": "Blue",
+        "onHand": 1,
+        "reserved": 0,
+        "available": 1,
+        "confirmed": true,
+        "overdueReserved": 0
+      },
+      {
+        "slug": "black-lever-lifting-belt",
+        "status": "active",
+        "size": "One Size",
+        "color": "Black",
+        "onHand": 3,
+        "reserved": 1,
+        "available": 2,
+        "confirmed": true,
+        "overdueReserved": 1
+      },
+      {
+        "slug": "red-graphic-compression-shirt",
+        "status": "active",
+        "size": "L",
+        "color": "Black",
+        "onHand": 3,
+        "reserved": 3,
+        "available": 0,
+        "confirmed": true,
+        "overdueReserved": 3
+      },
+      {
+        "slug": "weight-lifting-straps",
+        "status": "coming_soon",
+        "size": "1 size fits all",
+        "color": "black",
+        "onHand": 5,
+        "reserved": 0,
+        "available": 5,
+        "confirmed": true,
+        "overdueReserved": 0
+      },
+      {
+        "slug": "white-graphic-compression-shirt",
+        "status": "active",
+        "size": "L",
+        "color": "Black",
+        "onHand": 3,
+        "reserved": 2,
+        "available": 1,
+        "confirmed": true,
+        "overdueReserved": 2
+      }
+    ],
+    "overdueReservationRows": 3,
+    "overdueReservedUnits": 6,
+    "staffCounts": {
+      "owner": 1
+    },
+    "packages": [
+      {
+        "name": "Physical Coaching - Monthly",
+        "mode": "physical",
+        "price": 30000,
+        "billing_model": "monthly",
+        "active": true
+      },
+      {
+        "name": "Online Coaching - Monthly",
+        "mode": "online",
+        "price": 30000,
+        "billing_model": "monthly",
+        "active": true
+      }
+    ],
+    "activeDeliveryRates": 0,
+    "bankConfigured": true,
+    "pickupConfigured": true,
+    "whatsappRemindersEnabled": false,
+    "publishedContentSections": [],
+    "configuration": {
+      "siteOrigin": "http://localhost:3000",
+      "launchReady": false,
+      "imageProvider": "r2",
+      "r2PublicHost": "pub-ce34609096ed4ef3a803b802b02c92b6.r2.dev",
+      "emailEnabled": false,
+      "emailProviderTested": false,
+      "whatsappEnabled": false,
+      "whatsappProviderTested": false
+    },
+    "emailRemindersEnabled": false,
+    "settingsReadSucceeded": true
+  },
+  "stockFinding": {
+    "publicRoute": "/shop/red-graphic-compression-shirt",
+    "publicSoldOutText": false,
+    "physicalInventoryVerified": false,
+    "holdsReleasedDuringAudit": false
+  },
+  "historicalOriginFinding": {
+    "oldSnapshot": "2026-10-19",
+    "oldOrigin": "http://localhost:3001",
+    "currentConfiguredAndObservedOrigin": "http://localhost:3000",
+    "activeDefect": false
+  }
+}
