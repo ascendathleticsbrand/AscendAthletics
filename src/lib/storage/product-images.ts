@@ -3,7 +3,7 @@ import 'server-only';
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { AppError } from '../backend/errors';
 import { createAdminClient } from '../supabase/admin';
-import { getR2PublicBaseUrl } from './image-urls';
+import { getR2PublicBaseUrl, productImageReference } from './image-urls';
 
 export type ProductImageContentType = 'image/jpeg' | 'image/png' | 'image/webp';
 export type UploadedProductImage = Readonly<{
