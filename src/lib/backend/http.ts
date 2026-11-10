@@ -13,27 +13,13 @@ export function requestBaseOrigin(request: Request) {
     return protocol + '://' + host;
   return parsed.origin;
 }
-// Mutations must originate from this site; production also checks explicitly configured site origins.
+// Mutations must originate from the host serving this request. Comparing the browser's
+// Origin with the request host protects against cross-site requests while allowing the
+// same deployment to serve its Vercel alias and any configured custom domain.
 export function assertSameOrigin(request: Request) {
   const origin = request.headers.get('origin');
   const expected = requestBaseOrigin(request);
-  const configured = [
-    process.env.NEXT_PUBLIC_SITE_URL,
-    process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : undefined,
-  ]
-    .filter(Boolean)
-    .map((value) => {
-      try {
-        return new URL(value!).origin;
-      } catch {
-        return '';
-      }
-    });
-  if (
-    !origin ||
-    origin !== expected ||
-    (process.env.NODE_ENV === 'production' && configured.length > 0 && !configured.includes(origin))
-  )
+  if (!origin || origin !== expected)
     throw new AppError(
       'The request origin could not be verified. Reload the page and try again.',
       403,
