@@ -178,3 +178,40 @@ export async function cleanupUploadedProductImage(result: UploadedProductImage):
   await rollback();
   uploadRollbacks.delete(result);
 }
+
+/** Removes gallery objects after the database has permanently deleted their product. */
+export async function deleteProductImageObjects(
+  productId: string,
+  storagePaths: string[],
+): Promise<void> {
+  for (const storagePath of storagePaths) {
+    const reference = productImageReference(storagePath, productId);
+    if (!reference)
+      throw new AppError('A product image path failed validation during storage cleanup.');
+
+    if (/^https:\/\//i.test(reference)) {
+      const config = r2Configuration();
+      const url = new URL(reference);
+      const objectPath = url.pathname.slice('/products/'.length);
+      const client = new S3Client(config.client);
+      try {
+        await client.send(
+          new DeleteObjectCommand({ Bucket: config.bucket, Key: `products/${objectPath}` }),
+        );
+      } catch {
+        throw new AppError(
+          'The product was deleted, but an image could not be removed from Cloudflare R2.',
+        );
+      } finally {
+        client.destroy();
+      }
+      continue;
+    }
+
+    const { error } = await createAdminClient().storage.from('product-images').remove([reference]);
+    if (error)
+      throw new AppError(
+        'The product was deleted, but an image could not be removed from Supabase Storage.',
+      );
+  }
+}

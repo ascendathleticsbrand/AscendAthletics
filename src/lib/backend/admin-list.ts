@@ -19,6 +19,7 @@ export const adminListOptionsSchema = z.object({
     ])
     .catch('all'),
   stockFilter: z.enum(['all', 'unconfirmed', 'low_stock', 'available']).catch('all'),
+  categoryId: z.string().uuid().catch(''),
 });
 export type AdminListOptions = {
   range?: string;
@@ -30,6 +31,7 @@ export type AdminListOptions = {
   filter?: string;
   paymentFilter?: string;
   stockFilter?: string;
+  categoryId?: string;
 };
 export const adminFilters: Record<string, { column: string; values: string[] }> = {
   products: { column: 'status', values: ['draft', 'coming_soon', 'active', 'unavailable'] },

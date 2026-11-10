@@ -1,6 +1,8 @@
 import 'server-only';
+import { randomUUID } from 'node:crypto';
 /** Validates dashboard actions, checks staff permissions and delegates stock, payment and coaching changes to database functions. */
 import { productImageReference } from '../storage/image-urls';
+import { deleteProductImageObjects } from '../storage/product-images';
 import { z } from 'zod';
 import { requireStaff } from '../auth';
 import { createAdminClient } from '../supabase/admin';
@@ -19,6 +21,8 @@ const text = z.string().trim();
 const money = z.coerce.number().nonnegative().max(100000000);
 const ownerActions = new Set([
   'resolveOrderStock',
+  'removeStock',
+  'deleteProduct',
   'verifyPayment',
   'rejectPayment',
   'refundPayment',
@@ -70,12 +74,91 @@ export async function adminAction(action: string, raw: Json) {
     if (!data) throw new AppError('The record could not be saved.');
     return data as unknown as Json;
   }
+  async function assertProductPublishable(productId: string) {
+    const { data, error } = await db
+      .from('products')
+      .select('id,product_images(id),product_variants(stock_available,stock_confirmed_at)')
+      .eq('id', productId)
+      .maybeSingle();
+    databaseError(error);
+    if (!data) throw new AppError('Product not found.', 404);
+    if (!Array.isArray(data.product_images) || !data.product_images.length)
+      throw new AppError('Add at least one product photograph before publishing.');
+    if (
+      !Array.isArray(data.product_variants) ||
+      !data.product_variants.some(
+        (variant: Json) => variant.stock_confirmed_at && Number(variant.stock_available) > 0,
+      )
+    )
+      throw new AppError('Confirm at least one available unit before publishing.');
+  }
   switch (action) {
     case 'saveProduct': {
+      const setup = raw.id
+        ? null
+        : z
+            .object({
+              opening_size: text.min(1).max(50).default('One Size'),
+              opening_color: text.min(1).max(60).default('Default'),
+              opening_quantity: z.coerce.number().int().min(0).max(100000),
+              publish_to_store: z.boolean().default(false),
+              additional_variants: z.array(text.max(200)).max(20).default([]),
+            })
+            .parse(raw);
+      const additionalVariants = (setup?.additional_variants || []).map((line, index) => {
+        const [size, color, quantity, ...extra] = line.split('|').map((part) => part.trim());
+        if (extra.length || !size || !color || !/^\d+$/.test(quantity || ''))
+          throw new AppError(
+            `Variant line ${index + 1} must use: Size | Colour | whole stock count.`,
+          );
+        return {
+          size: text.min(1).max(50).parse(size),
+          color: text.min(1).max(60).parse(color),
+          quantity: z.coerce.number().int().min(0).max(100000).parse(quantity),
+        };
+      });
+      if (setup?.publish_to_store && setup.opening_quantity < 1)
+        throw new AppError(
+          'Count at least one unit before publishing. Save as a draft if stock is not ready.',
+        );
       const { image_urls, ...input } = productSchema.parse(raw);
       if (role !== 'owner' && input.cost_price != null)
         throw new AppError('Only the owner may change purchasing costs.', 403);
-      const product = await save('products', input);
+      if (input.id && input.status === 'active') await assertProductPublishable(input.id);
+      const product = setup
+        ? await rpc('setup_product', {
+            p_product: input,
+            p_size: setup.opening_size,
+            p_color: setup.opening_color,
+            p_quantity: setup.opening_quantity,
+            // The browser publishes only after variants and photographs have been saved.
+            p_publish: false,
+          })
+        : await save('products', input);
+      if (setup && additionalVariants.length) {
+        for (const [index, variant] of additionalVariants.entries()) {
+          try {
+            const createdVariant = await save('product_variants', {
+              product_id: product.product.id,
+              sku: `ASC-${String(product.product.id).replaceAll('-', '').toUpperCase()}-${index + 2}`,
+              size: variant.size,
+              color: variant.color,
+              low_stock_threshold: 5,
+            });
+            await rpc('record_stock', {
+              p_variant_id: createdVariant.id,
+              p_kind: 'opening',
+              p_quantity: variant.quantity,
+              p_note: 'Opening stock counted during product setup',
+              p_resellable: false,
+            });
+          } catch {
+            throw new AppError(
+              `The product draft was saved, but size/colour option ${index + 2} could not be completed. Find the draft in Products and finish that option there; do not submit the form again.`,
+            );
+          }
+        }
+      }
       // Omitted image_urls leaves the gallery alone; a supplied list replaces its saved attachments.
       if (image_urls) {
         const paths = image_urls.map((value) => {
@@ -102,6 +185,49 @@ export async function adminAction(action: string, raw: Json) {
       }
       return product;
     }
+    case 'publishProduct': {
+      const { product_id } = z.object({ product_id: uuid }).parse(raw);
+      await assertProductPublishable(product_id);
+      const { data: product, error } = await db
+        .from('products')
+        .update({ status: 'active' })
+        .eq('id', product_id)
+        .select('id,status')
+        .single();
+      databaseError(error);
+      if (!product) throw new AppError('Product could not be published.');
+      return product;
+    }
+    case 'archiveProduct': {
+      const { product_id } = z.object({ product_id: uuid }).parse(raw);
+      const { data: product, error } = await db
+        .from('products')
+        .update({ status: 'unavailable' })
+        .eq('id', product_id)
+        .select('id,status')
+        .single();
+      databaseError(error);
+      if (!product) throw new AppError('Product could not be archived.');
+      return product;
+    }
+    case 'deleteProduct': {
+      const input = z
+        .object({
+          product_id: uuid,
+          confirm_name: text.min(1).max(180),
+        })
+        .parse(raw);
+      const result = await rpc('delete_unused_product', {
+        p_product_id: input.product_id,
+        p_confirm_name: input.confirm_name,
+      });
+      try {
+        await deleteProductImageObjects(input.product_id, result.image_paths || []);
+      } catch {
+        return { id: result.id, name: result.name, image_cleanup_pending: true };
+      }
+      return { id: result.id, name: result.name, deleted: true };
+    }
     case 'deleteProductImage': {
       const { image_id } = z.object({ image_id: uuid }).parse(raw);
       const { data: image, error: ie } = await db
@@ -115,20 +241,25 @@ export async function adminAction(action: string, raw: Json) {
       databaseError(error);
       return { removed: true };
     }
-    case 'saveVariant':
-      return save(
-        'product_variants',
-        z
-          .object({
-            id: uuid.optional(),
-            product_id: uuid,
-            sku: text.min(2).max(80),
-            size: text.max(50).nullish(),
-            color: text.max(60).nullish(),
-            low_stock_threshold: z.coerce.number().int().nonnegative().max(100000).default(5),
-          })
-          .parse(raw),
-      );
+    case 'saveVariant': {
+      const variant = z
+        .object({
+          id: uuid.optional(),
+          product_id: uuid,
+          sku: z.preprocess(
+            (value) => (value === '' ? undefined : value),
+            text.min(2).max(80).optional(),
+          ),
+          size: text.max(50).nullish(),
+          color: text.max(60).nullish(),
+          low_stock_threshold: z.coerce.number().int().nonnegative().max(100000).default(5),
+        })
+        .parse(raw);
+      return save('product_variants', {
+        ...variant,
+        sku: variant.sku || `ASC-${randomUUID().replaceAll('-', '').toUpperCase()}`,
+      });
+    }
     // Stock changes go through the audited database workflow rather than directly editing a stock counter.
     case 'stockMovement': {
       const i = z
@@ -146,6 +277,22 @@ export async function adminAction(action: string, raw: Json) {
         p_quantity: i.quantity,
         p_note: i.note,
         p_resellable: i.resellable,
+      });
+    }
+    case 'removeStock': {
+      const i = z
+        .object({
+          variant_id: uuid,
+          quantity: z.coerce.number().int().min(1).max(100000),
+          note: text.min(3).max(1000),
+        })
+        .parse(raw);
+      return rpc('record_stock', {
+        p_variant_id: i.variant_id,
+        p_kind: 'adjustment',
+        p_quantity: -i.quantity,
+        p_note: i.note,
+        p_resellable: false,
       });
     }
     case 'createManualOrder': {

@@ -56,6 +56,9 @@ export async function Footer() {
               Instagram <ArrowUpRight size={14} />
             </a>
           )}
+          <a href="https://www.tiktok.com/@ascend.athletics4" target="_blank" rel="noreferrer">
+            TikTok <ArrowUpRight size={14} />
+          </a>
           {settings.contact_email && (
             <a href={`mailto:${settings.contact_email}`}>
               Email us <ArrowUpRight size={14} />

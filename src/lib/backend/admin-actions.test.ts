@@ -1,4 +1,4 @@
-﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
 const mocks = vi.hoisted(() => ({
@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   eq: vi.fn(),
   select: vi.fn(),
   single: vi.fn(),
+  maybeSingle: vi.fn(),
 }));
 vi.mock('../auth', () => ({ requireStaff: mocks.staff }));
 vi.mock('../supabase/admin', () => ({ createAdminClient: mocks.createAdmin }));
@@ -47,6 +48,7 @@ const query = {
   eq: mocks.eq,
   select: mocks.select,
   single: mocks.single,
+  maybeSingle: mocks.maybeSingle,
 };
 const db = { from: mocks.from };
 
@@ -63,13 +65,23 @@ beforeEach(() => {
   for (const method of [mocks.insert, mocks.update, mocks.upsert, mocks.eq, mocks.select])
     method.mockReturnValue(query);
   mocks.single.mockResolvedValue({ data: savedProduct, error: null });
+  mocks.maybeSingle.mockResolvedValue({
+    data: {
+      id: productId,
+      product_images: [{ id: 'image-1' }],
+      product_variants: [{ stock_available: 2, stock_confirmed_at: '2026-01-01T00:00:00Z' }],
+    },
+    error: null,
+  });
 });
 
 describe('admin product publishing under staff database permissions', () => {
   it('publishes an existing owner product with purchasing cost through its authenticated update', async () => {
     const saved = await adminAction('saveProduct', product);
     expect(saved).toEqual(savedProduct);
-    expect(mocks.from).toHaveBeenCalledExactlyOnceWith('products');
+    expect(mocks.from).toHaveBeenCalledTimes(2);
+    expect(mocks.from).toHaveBeenNthCalledWith(1, 'products');
+    expect(mocks.from).toHaveBeenNthCalledWith(2, 'products');
     expect(mocks.update).toHaveBeenCalledExactlyOnceWith({
       name: product.name,
       slug: product.slug,
@@ -80,9 +92,9 @@ describe('admin product publishing under staff database permissions', () => {
       featured: false,
     });
     expect(mocks.update.mock.calls[0][0]).not.toHaveProperty('id');
-    expect(mocks.eq).toHaveBeenCalledExactlyOnceWith('id', productId);
+    expect(mocks.eq).toHaveBeenCalledTimes(2);
     // Cost is owner-writeable but deliberately excluded from authenticated SELECT grants.
-    const projection = mocks.select.mock.calls[0][0] as string;
+    const projection = mocks.select.mock.calls[1][0] as string;
     expect(projection.split(',')).toContain('status');
     expect(projection.split(',')).not.toContain('cost_price');
     expect(projection).not.toContain('*');
@@ -91,16 +103,64 @@ describe('admin product publishing under staff database permissions', () => {
     expectNoPrivilegedWrite();
   });
 
-  it('creates a new product with INSERT and keeps its purchasing cost out of returned fields', async () => {
+  it('creates a draft with opening stock through the restricted product setup RPC', async () => {
     const { id: unusedId, ...newProduct } = product;
-    const saved = await adminAction('saveProduct', newProduct);
-    expect(saved.id).toBe(productId);
-    expect(mocks.insert).toHaveBeenCalledExactlyOnceWith(newProduct);
-    expect(mocks.select.mock.calls[0][0]).not.toMatch(/cost_price|\*/);
+    mocks.privilegedRpc.mockResolvedValueOnce({
+      data: { product: { id: productId, status: 'draft' }, variant: { id: variantId } },
+      error: null,
+    });
+    const saved = await adminAction('saveProduct', {
+      ...newProduct,
+      opening_quantity: 3,
+      opening_size: 'One Size',
+      opening_color: 'Default',
+      publish_to_store: false,
+    });
+    expect(saved.product.id).toBe(productId);
+    expect(mocks.privilegedRpc).toHaveBeenCalledExactlyOnceWith('setup_product', {
+      p_product: expect.objectContaining({ name: newProduct.name, price: newProduct.price }),
+      p_size: 'One Size',
+      p_color: 'Default',
+      p_quantity: 3,
+      p_publish: false,
+      p_actor: ownerId,
+    });
+    expect(mocks.insert).not.toHaveBeenCalled();
     expect(mocks.update).not.toHaveBeenCalled();
-    expect(mocks.upsert).not.toHaveBeenCalled();
     expect(mocks.eq).not.toHaveBeenCalled();
-    expectNoPrivilegedWrite();
+    expect(mocks.privilegedFrom).not.toHaveBeenCalled();
+  });
+
+  it('creates a unique SKU automatically when staff add a size and colour', async () => {
+    await adminAction('saveVariant', {
+      product_id: productId,
+      sku: '',
+      size: 'Large',
+      color: 'Black',
+      low_stock_threshold: 5,
+    });
+    const inserted = mocks.insert.mock.calls[0][0] as Record<string, unknown>;
+    expect(inserted.sku).toMatch(/^ASC-[A-F0-9]{32}$/);
+    expect(inserted).toMatchObject({ product_id: productId, size: 'Large', color: 'Black' });
+  });
+
+  it('rejects malformed additional variant lines before creating a product', async () => {
+    await expect(
+      adminAction('saveProduct', {
+        name: 'Training gloves',
+        slug: 'training-gloves',
+        description: '',
+        price: 17000,
+        opening_quantity: 3,
+        opening_size: 'One Size',
+        opening_color: 'Default',
+        additional_variants: ['Large / Black / 2'],
+      }),
+    ).rejects.toMatchObject({
+      message: 'Variant line 1 must use: Size | Colour | whole stock count.',
+    });
+    expect(mocks.privilegedRpc).not.toHaveBeenCalled();
+    expect(mocks.insert).not.toHaveBeenCalled();
   });
 
   it('rejects an assistant attempting to change purchasing cost before any database mutation', async () => {
@@ -129,7 +189,7 @@ describe('admin product publishing under staff database permissions', () => {
     await expect(adminAction('saveProduct', assistantProduct)).resolves.toEqual(savedProduct);
     expect(mocks.update).toHaveBeenCalledTimes(1);
     expect(mocks.update.mock.calls[0][0]).not.toHaveProperty('cost_price');
-    expect(mocks.eq).toHaveBeenCalledExactlyOnceWith('id', productId);
+    expect(mocks.eq).toHaveBeenCalledTimes(2);
     expectNoPrivilegedWrite();
   });
 
@@ -150,7 +210,7 @@ describe('admin product publishing under staff database permissions', () => {
       status: 400,
     });
     expect(mocks.update).toHaveBeenCalledTimes(1);
-    expect(mocks.eq).toHaveBeenCalledExactlyOnceWith('id', productId);
+    expect(mocks.eq).toHaveBeenCalledTimes(2);
     expect(mocks.insert).not.toHaveBeenCalled();
     expect(mocks.upsert).not.toHaveBeenCalled();
     expectNoPrivilegedWrite();

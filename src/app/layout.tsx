@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { CartProvider } from '@/components/store/cart-context';
+import { connection } from 'next/server';
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   title: { default: 'ASCEND ATHLETICS | RISE. PUSH. BECOME.', template: '%s | ASCEND ATHLETICS' },
@@ -31,7 +32,9 @@ export const metadata: Metadata = {
     follow: process.env.LAUNCH_READY === 'true',
   },
 };
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // A per-request CSP nonce cannot be safely attached to a build-time static page.
+  await connection();
   return (
     <html lang="en">
       {/* Browser extensions can add harmless body attributes before hydration. */}

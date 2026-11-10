@@ -9,6 +9,7 @@ import {
   ArrowDownToLine,
   ArrowRight,
   ArrowUpRight,
+  Boxes,
   CalendarDays,
   Check,
   CheckCircle2,
@@ -31,9 +32,11 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
+  ShoppingBag,
   SlidersHorizontal,
   Sparkles,
   TrendingUp,
+  Dumbbell,
   X,
 } from 'lucide-react';
 import { actions, sections, type Action, type AdminRecord, type Field } from './admin-config';
@@ -243,10 +246,20 @@ const metricDefinitions: Record<
       note: 'Awaiting your next step',
     },
     {
+      label: 'Completed orders',
+      keys: ['completedOrders', 'completed_orders'],
+      note: 'Ready and handed over',
+    },
+    { label: 'Products', keys: ['totalProducts'], note: 'Catalog items' },
+    { label: 'Published products', keys: ['publishedProducts'], note: 'Visible in the store' },
+    { label: 'Draft products', keys: ['draftProducts'], note: 'Not shown to customers' },
+    { label: 'Low-stock items', keys: ['low_stock'], note: 'Variants to review' },
+    {
       label: 'Active coaching clients',
       keys: ['activeClients', 'active_clients', 'active_enrollments'],
       note: 'Physical & online training',
     },
+    { label: 'Upcoming renewals', keys: ['upcomingRenewals'], note: 'Due within 7 days' },
   ],
   finances: [
     {
@@ -297,6 +310,33 @@ const metricDefinitions: Record<
     },
   ],
 };
+
+const overviewLinks = [
+  {
+    href: '/admin/orders',
+    label: 'Orders',
+    description: 'Review sales and prepare handover',
+    icon: Package,
+  },
+  {
+    href: '/admin/products',
+    label: 'Products',
+    description: 'Add products and update prices',
+    icon: ShoppingBag,
+  },
+  {
+    href: '/admin/inventory',
+    label: 'Stock',
+    description: 'Count units and record changes',
+    icon: Boxes,
+  },
+  {
+    href: '/admin/clients',
+    label: 'Coaching clients',
+    description: 'Manage plans and renewals',
+    icon: Dumbbell,
+  },
+];
 function summaryValue(summary: Record<string, unknown>, keys: string[]) {
   for (const key of keys) if (summary[key] !== undefined) return summary[key];
   return undefined;
@@ -309,6 +349,7 @@ export function AdminSection({ section, data: initial }: { section: string; data
   const [filter, setFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [stockFilter, setStockFilter] = useState('all');
+  const [categoryId, setCategoryId] = useState('');
   const [range, setRange] = useState('month');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -358,6 +399,7 @@ export function AdminSection({ section, data: initial }: { section: string; data
           filter,
           paymentFilter,
           stockFilter,
+          categoryId,
         });
         if (appliedRange.range === 'custom') {
           query.set('from', appliedRange.from);
@@ -388,6 +430,7 @@ export function AdminSection({ section, data: initial }: { section: string; data
       filter,
       paymentFilter,
       stockFilter,
+      categoryId,
     ],
   );
   // Reuse the server snapshot on first render and debounce typed searches afterwards.
@@ -575,6 +618,30 @@ export function AdminSection({ section, data: initial }: { section: string; data
           {notice}
         </div>
       )}
+      {section === 'overview' && (
+        <section className="admin-home-links" aria-labelledby="admin-home-links-title">
+          <div className="admin-home-links-heading">
+            <div>
+              <p className="admin-eyebrow">START HERE</p>
+              <h2 id="admin-home-links-title">What do you need to do?</h2>
+            </div>
+          </div>
+          <div className="admin-home-links-grid">
+            {overviewLinks.map(({ href, label, description, icon: Icon }) => (
+              <Link href={href} className="admin-home-link" key={href}>
+                <span className="admin-home-link-icon">
+                  <Icon size={20} />
+                </span>
+                <span className="admin-home-link-copy">
+                  <strong>{label}</strong>
+                  <small>{description}</small>
+                </span>
+                <ArrowUpRight size={16} className="admin-home-link-arrow" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
       {(section === 'overview' || section === 'finances') && (
         <div className="admin-range-row">
           <span>
@@ -670,34 +737,35 @@ export function AdminSection({ section, data: initial }: { section: string; data
         </div>
       )}
       {(section === 'overview' || section === 'finances') && (
-        <div className="admin-insight-grid">
-          <RevenueChart summary={summary} setupRequired={setupRequired} />
+        <div
+          className={`admin-insight-grid ${section === 'overview' ? 'admin-insight-grid-home' : ''}`}
+        >
+          {section === 'finances' && (
+            <RevenueChart summary={summary} setupRequired={setupRequired} />
+          )}
           <AttentionPanel section={section} summary={summary} data={data} onAction={openAction} />
         </div>
       )}
       {section === 'products' && (
         <div className="admin-onboarding">
           <div>
-            <p className="admin-eyebrow">LAUNCH WITH CONFIDENCE</p>
-            <h2>Count first. Publish next.</h2>
-            <p>Only variants with a confirmed physical stock count can be purchased.</p>
+            <p className="admin-eyebrow">PRODUCT SETUP</p>
+            <h2>Add product, stock and publish in one step.</h2>
+            <p>Enter the size and colour you counted. ASCEND creates the SKU automatically.</p>
           </div>
           <ol>
             <li>
               <span>01</span>Product details
             </li>
             <li>
-              <span>02</span>Official photos & SKUs
+              <span>02</span>Count current stock
             </li>
             <li>
-              <span>03</span>Confirm opening stock
-            </li>
-            <li>
-              <span>04</span>Publish to shop
+              <span>03</span>Publish to the shop
             </li>
           </ol>
           <Link href="/admin/inventory">
-            Open inventory <ArrowUpRight size={17} />
+            Manage later stock changes <ArrowUpRight size={17} />
           </Link>
         </div>
       )}
@@ -793,7 +861,7 @@ export function AdminSection({ section, data: initial }: { section: string; data
                 disabled={!actionAllowed(actions[key], owner, setupRequired, permissions)}
               >
                 <Plus size={15} />
-                {actions[key].label}
+                {section === 'products' && key === 'saveProduct' ? 'Edit' : actions[key].label}
               </button>
             ))}
             <button
@@ -843,6 +911,29 @@ export function AdminSection({ section, data: initial }: { section: string; data
                 {filters.map((v) => (
                   <option key={v} value={v}>
                     {human(v)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {section === 'products' && (
+            <div className="admin-filter">
+              <SlidersHorizontal size={15} />
+              <label className="admin-sr-only" htmlFor="product-category-filter">
+                Filter by category
+              </label>
+              <select
+                id="product-category-filter"
+                value={categoryId}
+                onChange={(e) => {
+                  setCategoryId(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">All categories</option>
+                {(refs.categories || []).map((category) => (
+                  <option key={String(category.id)} value={String(category.id)}>
+                    {scalar(category.name)}
                   </option>
                 ))}
               </select>
@@ -938,13 +1029,54 @@ export function AdminSection({ section, data: initial }: { section: string; data
                     </td>
                   ))}
                   <td>
-                    <button
-                      className="admin-row-open"
-                      onClick={() => setDetails(record)}
-                      aria-label={`Open ${config.singular} details`}
-                    >
-                      <ArrowUpRight size={17} />
-                    </button>
+                    {section === 'products' ? (
+                      <div className="admin-product-row-actions">
+                        <button
+                          type="button"
+                          className="admin-button admin-button-subtle"
+                          onClick={() => openAction('saveProduct', record)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-button admin-button-subtle"
+                          onClick={() => setDetails(record)}
+                        >
+                          Details
+                        </button>
+                        {record.status !== 'unavailable' && (
+                          <button
+                            type="button"
+                            className="admin-button admin-button-danger"
+                            onClick={() => openAction('archiveProduct', record)}
+                            disabled={
+                              !actionAllowed(actions.archiveProduct, owner, setupRequired, permissions)
+                            }
+                          >
+                            Remove
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="admin-button admin-button-danger"
+                          onClick={() => openAction('deleteProduct', record)}
+                          disabled={
+                            !actionAllowed(actions.deleteProduct, owner, setupRequired, permissions)
+                          }
+                        >
+                          Delete permanently
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        className="admin-row-open"
+                        onClick={() => setDetails(record)}
+                        aria-label={`Open ${config.singular} details`}
+                      >
+                        <ArrowUpRight size={17} />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -1089,6 +1221,20 @@ function Cell({ record, column }: { record: AdminRecord; column: { key: string; 
   const value = recordValue(record, column.key);
   if (column.type === 'money') return <span className="admin-cell-money">{money(value)}</span>;
   if (column.type === 'date') return <span className="admin-cell-muted">{dateLabel(value)}</span>;
+  if (
+    column.type === 'status' &&
+    column.key === 'status' &&
+    Array.isArray(record.product_variants)
+  ) {
+    const available = (record.product_variants as AdminRecord[]).reduce(
+      (total, variant) => total + Number(variant.stock_available || 0),
+      0,
+    );
+    const label =
+      value === 'active' ? (available > 0 ? 'Published' : 'Out of stock') : human(value);
+    const status = value === 'active' && available < 1 ? 'unavailable' : String(value || 'unknown');
+    return <span className={`admin-badge status-${status}`}>{label}</span>;
+  }
   if (column.type === 'status')
     return (
       <span className={`admin-badge status-${String(value || 'unknown')}`}>{human(value)}</span>
@@ -1622,7 +1768,9 @@ function ActionDialog({
   }, [onClose, saving]);
   const edit = Boolean(
     record &&
-    ((action.key === 'saveProduct' && record.price !== undefined && !record.sku) ||
+    ((action.key === 'saveProduct' &&
+      record.price !== undefined &&
+      typeof record.slug === 'string') ||
       (action.key === 'saveVariant' && record.sku) ||
       (action.key === 'saveCustomer' && record.email !== undefined) ||
       (action.key === 'savePackage' && record.billing_model) ||
@@ -1642,6 +1790,8 @@ function ActionDialog({
       return;
     }
     const fd = new FormData(event.currentTarget);
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const saveMode = submitter?.name === 'saveMode' ? submitter.value : 'draft';
     setSaving(true);
     try {
       let response: Response;
@@ -1654,8 +1804,24 @@ function ActionDialog({
       } else {
         const payload: Record<string, unknown> = { action: action.key };
         if (edit) payload.id = record?.id;
+        if (action.key === 'archiveProduct' || action.key === 'deleteProduct')
+          payload.product_id = record?.id;
         for (const field of action.fields) {
-          if (field.key === 'cost_price' && !owner) continue;
+          if (field.key === 'product_photos') continue;
+          if (
+            action.key === 'saveProduct' &&
+            !edit &&
+            ['status', 'featured', 'size_guide'].includes(field.key)
+          )
+            continue;
+          if (
+            action.key === 'saveProduct' &&
+            edit &&
+            ['opening_size', 'opening_color', 'opening_quantity', 'publish_to_store'].includes(
+              field.key,
+            )
+          )
+            continue;
           const value = fd.get(field.key);
           const nullable = nullableActionFields[action.key]?.includes(field.key);
           if (field.type === 'checkbox') payload[field.key] = value === 'on';
@@ -1691,6 +1857,20 @@ function ActionDialog({
             else if (!field.required && field.type !== 'reference') payload[field.key] = '';
           }
         }
+        if (action.key === 'saveProduct' && !edit && !String(payload.slug || '').trim()) {
+          const generatedSlug = String(payload.name || '')
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '')
+            .slice(0, 180)
+            .replace(/-$/g, '');
+          if (!generatedSlug)
+            throw new Error('Enter a product name so we can create its shop link.');
+          payload.slug = generatedSlug;
+        }
+        if (action.key === 'saveProduct' && !edit) payload.publish_to_store = false;
         if (action.special === 'order') {
           if (
             !items.length ||
@@ -1762,24 +1942,95 @@ function ActionDialog({
           body: JSON.stringify(payload),
         });
       }
-      const result = await response.json();
+      let result = await response.json();
       if (!response.ok)
         throw new Error(
           result.error || 'This operation could not be completed. Check the details and try again.',
         );
+      if (action.key === 'saveProduct' && !edit) {
+        const product = result.data?.product;
+        const photos = fd
+          .getAll('product_photos')
+          .filter((file): file is File => file instanceof File && file.size > 0);
+        if (!product?.id)
+          throw new Error(
+            'Product saved, but its new record ID was not returned. Refresh Products before trying again.',
+          );
+        if (photos.length > 5) {
+          onSaved(
+            'Draft saved. Choose no more than 5 photographs; you can upload them from the product details.',
+            result.data,
+          );
+          return;
+        }
+        for (const [index, photo] of photos.entries()) {
+          if (photo.size > 5 * 1024 * 1024) {
+            onSaved(
+              `Draft saved. Photograph ${index + 1} is over 5 MB; upload a smaller image from product details.`,
+              result.data,
+            );
+            return;
+          }
+          const upload = new FormData();
+          upload.set('product_id', String(product.id));
+          upload.set('file', photo);
+          upload.set('alt', String(fd.get('name') || 'ASCEND product'));
+          upload.set('sort_order', String(index));
+          const uploaded = await fetch('/api/admin/upload', { method: 'POST', body: upload });
+          const uploadResult = await uploaded.json();
+          if (!uploaded.ok) {
+            onSaved(
+              `Draft saved, but photograph ${index + 1} could not be uploaded: ${uploadResult.error || 'upload failed'}. You can retry from product details.`,
+              result.data,
+            );
+            return;
+          }
+        }
+        if (saveMode === 'publish') {
+          if (Number(fd.get('opening_quantity')) < 1) {
+            onSaved(
+              'Draft saved. Count at least one unit before publishing from product details.',
+              result.data,
+            );
+            return;
+          }
+          const published = await fetch('/api/admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'publishProduct', product_id: product.id }),
+          });
+          const publishedResult = await published.json();
+          if (!published.ok) {
+            onSaved(
+              `Product and photographs are saved as a draft, but publishing failed: ${publishedResult.error || 'try again from Products'}.`,
+              result.data,
+            );
+            return;
+          }
+          result.data.product.status = publishedResult.data?.status || 'active';
+        }
+      }
       const message =
         result.message ||
-        (action.key === 'verifyPayment' && result.data?.order?.resolution_required
-          ? 'Bank credit verified. This order needs owner stock resolution before fulfillment.'
-          : action.key === 'recordPayment'
-            ? 'Transfer claim recorded. Payment remains pending verification.'
-            : action.key === 'verifyPayment'
-              ? 'Bank credit verified. Review the invoice and any stock resolution flags.'
-              : action.key === 'extendEnrollment'
-                ? 'Renewal invoice created. Confirm payment before activating the new enrollment.'
-                : action.key === 'sendCampaign'
-                  ? 'Campaign sending result recorded. Review delivery status.'
-                  : 'Saved successfully. Your workspace has been updated.');
+        (action.key === 'deleteProduct'
+          ? result.data?.image_cleanup_pending
+            ? 'Product permanently deleted. An image file could not be removed from storage; its details are preserved in the audit log for cleanup.'
+            : `“${result.data?.name || 'Product'}” was permanently deleted.`
+          : action.key === 'saveProduct' && !edit
+            ? result.data?.product?.status === 'active'
+              ? 'Product published. Its opening stock is recorded and available in the web store.'
+              : 'Product details, opening stock and photographs saved as a draft.'
+            : action.key === 'verifyPayment' && result.data?.order?.resolution_required
+              ? 'Bank credit verified. This order needs owner stock resolution before fulfillment.'
+              : action.key === 'recordPayment'
+                ? 'Transfer claim recorded. Payment remains pending verification.'
+                : action.key === 'verifyPayment'
+                  ? 'Bank credit verified. Review the invoice and any stock resolution flags.'
+                  : action.key === 'extendEnrollment'
+                    ? 'Renewal invoice created. Confirm payment before activating the new enrollment.'
+                    : action.key === 'sendCampaign'
+                      ? 'Campaign sending result recorded. Review delivery status.'
+                      : 'Saved successfully. Your workspace has been updated.');
       onSaved(message, result.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to complete this operation.');
@@ -1857,7 +2108,25 @@ function ActionDialog({
             )}
             <fieldset className="admin-form-fields" disabled={saving || setupRequired}>
               {action.fields.map((field) => {
-                if (field.key === 'cost_price' && !owner && !setupRequired) return null;
+                if (
+                  action.key === 'saveProduct' &&
+                  !edit &&
+                  ['status', 'featured', 'size_guide'].includes(field.key)
+                )
+                  return null;
+                if (action.key === 'saveProduct' && edit && field.key === 'product_photos')
+                  return null;
+                if (
+                  action.key === 'saveProduct' &&
+                  edit &&
+                  [
+                    'opening_size',
+                    'opening_color',
+                    'opening_quantity',
+                    'publish_to_store',
+                  ].includes(field.key)
+                )
+                  return null;
                 const hideDelivery =
                   action.special === 'order' &&
                   selectedMethod === 'pickup' &&
@@ -1990,7 +2259,10 @@ function ActionDialog({
             </fieldset>
             <footer className="admin-dialog-footer">
               <span>
-                <ShieldCheck size={14} /> Server permissions apply
+                <ShieldCheck size={14} />
+                {action.key === 'saveProduct'
+                  ? 'Product, stock and store availability save together.'
+                  : 'Server permissions apply'}
               </span>
               <button
                 type="button"
@@ -2000,24 +2272,52 @@ function ActionDialog({
               >
                 Cancel
               </button>
-              <button
-                className="admin-button admin-button-gold"
-                type="submit"
-                disabled={saving || setupRequired || Boolean(action.confirm && !confirmed)}
-              >
-                {saving ? (
-                  <>
-                    <Loader2 size={16} className="admin-spinning" />
-                    Saving...
-                  </>
-                ) : action.key === 'sendCampaign' ? (
-                  'Send approved email'
-                ) : action.key === 'verifyPayment' ? (
-                  'Confirm bank credit'
-                ) : (
-                  'Save changes'
-                )}
-              </button>
+              {action.key === 'saveProduct' && !edit ? (
+                <>
+                  <button
+                    className="admin-button admin-button-subtle"
+                    type="submit"
+                    name="saveMode"
+                    value="draft"
+                    disabled={saving || setupRequired}
+                  >
+                    {saving ? 'Saving...' : 'Save as Draft'}
+                  </button>
+                  <button
+                    className="admin-button admin-button-gold"
+                    type="submit"
+                    name="saveMode"
+                    value="publish"
+                    disabled={saving || setupRequired}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 size={16} className="admin-spinning" /> Saving...
+                      </>
+                    ) : (
+                      'Save and Publish'
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="admin-button admin-button-gold"
+                  type="submit"
+                  disabled={saving || setupRequired || Boolean(action.confirm && !confirmed)}
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 size={16} className="admin-spinning" /> Saving...
+                    </>
+                  ) : action.key === 'sendCampaign' ? (
+                    'Send approved email'
+                  ) : action.key === 'verifyPayment' ? (
+                    'Confirm bank credit'
+                  ) : (
+                    'Save changes'
+                  )}
+                </button>
+              )}
             </footer>
           </form>
         )}
@@ -2077,7 +2377,7 @@ function FormField({
         {!field.required && <option value="">Choose an option</option>}
         {field.options?.map((option) => (
           <option key={option} value={option} disabled={disabledOptions.includes(option)}>
-            {human(option)}
+            {field.optionLabels?.[option] || human(option)}
             {disabledOptions.includes(option) ? ' · confirm stock first' : ''}
           </option>
         ))}
@@ -2134,7 +2434,14 @@ function FormField({
       </div>
     );
   } else if (field.type === 'file')
-    control = <input {...common} type="file" accept="image/png,image/jpeg,image/webp" />;
+    control = (
+      <input
+        {...common}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        multiple={field.multiple}
+      />
+    );
   else
     control = (
       <input

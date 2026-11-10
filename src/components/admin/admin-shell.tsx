@@ -14,6 +14,7 @@ import {
   CircleUserRound,
   CreditCard,
   Dumbbell,
+  Ellipsis,
   FileText,
   LayoutDashboard,
   Megaphone,
@@ -30,10 +31,10 @@ import {
 export const adminNavigation = [
   { id: 'overview', label: 'Overview', href: '/admin', icon: LayoutDashboard },
   { id: 'products', label: 'Products', href: '/admin/products', icon: ShoppingBag },
-  { id: 'inventory', label: 'Inventory', href: '/admin/inventory', icon: Boxes },
   { id: 'orders', label: 'Orders', href: '/admin/orders', icon: Package },
+  { id: 'clients', label: 'Coaching', href: '/admin/clients', icon: Dumbbell },
+  { id: 'inventory', label: 'Inventory', href: '/admin/inventory', icon: Boxes },
   { id: 'customers', label: 'Customers', href: '/admin/customers', icon: Users },
-  { id: 'clients', label: 'Coaching Clients', href: '/admin/clients', icon: Dumbbell },
   { id: 'packages', label: 'Training Packages', href: '/admin/packages', icon: FileText },
   { id: 'payments', label: 'Payments', href: '/admin/payments', icon: CreditCard },
   { id: 'finances', label: 'Finances', href: '/admin/finances', icon: BarChart3 },
@@ -41,6 +42,16 @@ export const adminNavigation = [
   { id: 'content', label: 'Website Content', href: '/admin/content', icon: FileText },
   { id: 'settings', label: 'Settings', href: '/admin/settings', icon: Settings },
 ];
+const moreNavigationIds = new Set([
+  'payments',
+  'packages',
+  'finances',
+  'marketing',
+  'content',
+  'settings',
+]);
+const primaryNavigation = adminNavigation.filter((item) => !moreNavigationIds.has(item.id));
+const moreNavigation = adminNavigation.filter((item) => moreNavigationIds.has(item.id));
 
 // The drawer state is visual only; access is checked by the server layout and API.
 export function AdminShell({
@@ -57,6 +68,8 @@ export function AdminShell({
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const active = adminNavigation.find((item) => item.href === pathname) || adminNavigation[0];
+  const activeIsMore = moreNavigation.some((item) => item.href === pathname);
+  const [moreOpen, setMoreOpen] = useState(activeIsMore);
   return (
     <div className="admin-root">
       <button
@@ -96,11 +109,14 @@ export function AdminShell({
         </div>
         <nav aria-label="Admin navigation">
           <p className="admin-nav-label">YOUR BUSINESS</p>
-          {adminNavigation.map(({ href, label, icon: Icon }) => (
+          {primaryNavigation.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
-              onClick={() => setMobileOpen(false)}
+              onClick={() => {
+                setMobileOpen(false);
+                setMoreOpen(false);
+              }}
               className={`admin-nav-link ${pathname === href ? 'active' : ''}`}
               aria-current={pathname === href ? 'page' : undefined}
             >
@@ -109,6 +125,32 @@ export function AdminShell({
               {pathname === href && <span className="admin-nav-active-dot" />}
             </Link>
           ))}
+          <button
+            className={`admin-nav-link admin-nav-more ${activeIsMore ? 'active' : ''}`}
+            type="button"
+            aria-expanded={moreOpen}
+            aria-controls="admin-more-navigation"
+            onClick={() => setMoreOpen((open) => !open)}
+          >
+            <Ellipsis size={18} strokeWidth={1.7} />
+            <span>More</span>
+            <ChevronDown className={moreOpen ? 'is-open' : ''} size={15} />
+          </button>
+          <div id="admin-more-navigation" className="admin-more-navigation" hidden={!moreOpen}>
+            {moreNavigation.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMobileOpen(false)}
+                className={`admin-nav-link ${pathname === href ? 'active' : ''}`}
+                aria-current={pathname === href ? 'page' : undefined}
+              >
+                <Icon size={18} strokeWidth={1.7} />
+                <span>{label}</span>
+                {pathname === href && <span className="admin-nav-active-dot" />}
+              </Link>
+            ))}
+          </div>
         </nav>
         <div className="admin-sidebar-footer">
           <Link href="/" target="_blank" className="admin-store-link">

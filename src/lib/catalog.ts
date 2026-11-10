@@ -2,7 +2,8 @@ import 'server-only';
 /** Reads the public storefront catalog and converts database records into the shapes used by shop components. */
 import { publicImageUrl as imageUrl } from './storage/image-urls';
 import { createPublicClient } from './supabase/public';
-import { hasSupabaseConfig, setupMessage } from './env';
+import { createAdminClient } from './supabase/admin';
+import { hasServiceConfig, hasSupabaseConfig, setupMessage } from './env';
 import type { Product, CoachingPackage, PublicCatalog, PublicSettings } from './backend/types';
 export type {
   Product,
@@ -111,10 +112,13 @@ export async function getPublicContent(): Promise<Record<string, Row>> {
 }
 export async function getBusinessSettings(): Promise<PublicSettings> {
   const fallback = { whatsapp_number: '2349130607719', contact_phone: '+234 913 060 7719' };
-  if (!hasSupabaseConfig()) return fallback;
-  const { data, error } = await createPublicClient()
-    .from('public_business_settings')
-    .select('*')
+  if (!hasServiceConfig()) return fallback;
+  // Read only the explicitly public columns. The owner-only settings row is never
+  // exposed through a SECURITY DEFINER view in the PostgREST API schema.
+  const { data, error } = await createAdminClient()
+    .from('business_settings')
+    .select('pickup_location,pickup_instructions,pickup_contact,pickup_hours,contact_email,whatsapp_number,instagram_url,timezone')
+    .eq('id', 1)
     .maybeSingle();
   if (error || !data) return fallback;
   return { ...fallback, ...data, pickup_phone: data.pickup_contact };

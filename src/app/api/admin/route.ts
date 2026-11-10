@@ -19,6 +19,7 @@ export async function GET(request: Request) {
       filter: search.get('filter') || undefined,
       paymentFilter: search.get('paymentFilter') || undefined,
       stockFilter: search.get('stockFilter') || undefined,
+      categoryId: search.get('categoryId') || undefined,
     });
   });
 }

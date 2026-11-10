@@ -55,6 +55,15 @@ function decorate(row: any): any {
     const next = Object.fromEntries(Object.entries(row).map(([k, v]) => [k, decorate(v)]));
     if (Array.isArray(next.product_images))
       next.images = next.product_images.map((i: any) => publicImageUrl(i.storage_path));
+    if (Array.isArray(next.product_variants))
+      next.stock_available = next.product_variants.reduce(
+        (sum: number, variant: any) => sum + Number(variant.stock_available || 0),
+        0,
+      );
+    if (Array.isArray(next.order_items))
+      next.items_summary = next.order_items
+        .map((item: any) => `${item.product_name || 'Item'} × ${item.quantity}`)
+        .join(', ');
     if (Array.isArray(next.campaign_recipients))
       next.subscriber_ids = next.campaign_recipients.map((r: any) => r.subscriber_id);
     if (Array.isArray(next.collection_products))
@@ -130,6 +139,8 @@ export async function getAdminData(section = 'overview', options: AdminListOptio
     ? (config.select || '*').replace('invoices(*)', 'invoices!inner(*)')
     : config.select || '*';
   let recordQuery = db.from(config.table).select(selection, { count: 'exact' });
+  if (section === 'products' && paging.categoryId)
+    recordQuery = recordQuery.eq('category_id', paging.categoryId);
   const filter = adminFilters[section];
   if (filter && filter.values.includes(paging.filter))
     recordQuery = recordQuery.eq(filter.column, paging.filter);
@@ -284,36 +295,52 @@ export async function getAdminData(section = 'overview', options: AdminListOptio
   const inSevenDays = new Date(Date.parse(today + 'T00:00:00Z') + 7 * 86400000)
     .toISOString()
     .slice(0, 10);
-  const [active, pendingOrders, pendingPayments, unconfirmed, stock, lowStock, renewals] =
-    await Promise.all([
-      db
-        .from('coaching_enrollments')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'active'),
-      db
-        .from('orders')
-        .select('id', { count: 'exact', head: true })
-        .in('fulfillment_status', ['pending', 'processing', 'ready_for_pickup', 'shipped']),
-      db
-        .from('payments')
-        .select('id', { count: 'exact', head: true })
-        .in('status', ['pending', 'evidence_submitted']),
-      db
-        .from('product_variants')
-        .select('id', { count: 'exact', head: true })
-        .is('stock_confirmed_at', null),
-      inventoryTotals(db, user.id),
-      db
-        .from('product_variants')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_low_stock', true),
-      db
-        .from('coaching_enrollments')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'active')
-        .gte('expiry_date', today)
-        .lte('expiry_date', inSevenDays),
-    ]);
+  const [
+    active,
+    pendingOrders,
+    pendingPayments,
+    unconfirmed,
+    stock,
+    lowStock,
+    renewals,
+    publishedProducts,
+    draftProducts,
+    completedOrders,
+  ] = await Promise.all([
+    db
+      .from('coaching_enrollments')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'active'),
+    db
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .in('fulfillment_status', ['pending', 'processing', 'ready_for_pickup', 'shipped']),
+    db
+      .from('payments')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['pending', 'evidence_submitted']),
+    db
+      .from('product_variants')
+      .select('id', { count: 'exact', head: true })
+      .is('stock_confirmed_at', null),
+    inventoryTotals(db, user.id),
+    db
+      .from('product_variants')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_low_stock', true),
+    db
+      .from('coaching_enrollments')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'active')
+      .gte('expiry_date', today)
+      .lte('expiry_date', inSevenDays),
+    db.from('products').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+    db.from('products').select('id', { count: 'exact', head: true }).eq('status', 'draft'),
+    db
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .in('fulfillment_status', ['delivered', 'picked_up']),
+  ]);
 
   summary = {
     ...summary,
@@ -325,6 +352,9 @@ export async function getAdminData(section = 'overview', options: AdminListOptio
     productSales: summary.sales_by_product,
     packageIncome: summary.income_by_package,
     totalProducts: refResults[0].count,
+    publishedProducts: publishedProducts.count,
+    draftProducts: draftProducts.count,
+    completedOrders: completedOrders.count,
     totalCustomers: refResults[4].count,
     activeClients: active.count,
     pendingOrders: pendingOrders.count,

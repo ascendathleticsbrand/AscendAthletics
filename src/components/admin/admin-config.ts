@@ -14,6 +14,8 @@ export type Field = {
   placeholder?: string;
   default?: string | number | boolean;
   full?: boolean;
+  multiple?: boolean;
+  optionLabels?: Record<string, string>;
 };
 export type Action = {
   key: string;
@@ -58,21 +60,84 @@ const date = (key: string, label: string, required = true): Field =>
 // Action keys are sent to /api/admin and matched by backend/admin-actions.ts.
 // A row action can prefill an existing record; a top-level action starts a new form.
 export const actions: Record<string, Action> = {
+  publishProduct: {
+    key: 'publishProduct',
+    label: 'Publish product',
+    description: 'Make this saved product available in the web store.',
+    recordKey: 'product_id',
+    fields: [],
+  },
+  archiveProduct: {
+    key: 'archiveProduct',
+    label: 'Remove from store',
+    description:
+      'Hide this product from the web store while keeping its product, order and inventory history.',
+    recordKey: 'product_id',
+    fields: [],
+    confirm: 'Remove this product from the web store? Its order and inventory history will be kept.',
+  },
+  deleteProduct: {
+    key: 'deleteProduct',
+    label: 'Delete permanently',
+    description:
+      'Permanently deletes this product, its variants, inventory movements and product images. Products with orders or reservations are protected so financial history stays intact.',
+    recordKey: 'product_id',
+    owner: true,
+    fields: [
+      f('confirm_name', 'Type the exact product name', 'text', true, {
+        placeholder: 'Product name',
+      }),
+    ],
+    confirm: 'I understand this permanently deletes the product and its inventory history.',
+  },
   saveProduct: {
     key: 'saveProduct',
     label: 'Add product',
     description:
-      'Create a draft, add real product photographs, then count every SKU before publishing.',
+      'Enter product details, count the stock and add photographs. Choose Save as Draft or Save and Publish. We create the SKU for you.',
     fields: [
       f('name', 'Product name', 'text', true),
-      f('slug', 'Shop URL slug', 'text', true, { help: 'Lowercase letters, numbers and hyphens.' }),
-      ref('category_id', 'Category', 'categories', false),
+      f('slug', 'Shop URL slug (optional)', 'text', false, {
+        help: 'Leave blank to create it from the product name.',
+      }),
+      ref('category_id', 'Category', 'categories', true),
       money('price', 'Selling price (NGN)'),
-      money('cost_price', 'Unit cost (NGN)', false),
-      choice('status', 'Product visibility', ['draft', 'coming_soon', 'active', 'unavailable']),
-      f('description', 'Description', 'textarea', true, { full: true }),
+      f('status', 'Store visibility', 'select', true, {
+        options: ['draft', 'coming_soon', 'active', 'unavailable'],
+        optionLabels: {
+          draft: 'Draft',
+          coming_soon: 'Coming soon',
+          active: 'Published',
+          unavailable: 'Unavailable',
+        },
+        help: 'Choose Draft, Coming soon, Published, or Unavailable. Publishing requires a product photo and confirmed available stock.',
+      }),
+      f('description', 'Description', 'textarea', false, { full: true }),
       f('size_guide', 'Size guide', 'textarea', false, { full: true }),
       f('featured', 'Feature on homepage', 'checkbox'),
+      f('opening_size', 'Starting size', 'text', true, {
+        default: 'One Size',
+        placeholder: 'For example, Large or One Size',
+        help: 'This creates the first size option. Add other variants from product details after saving.',
+      }),
+      f('opening_color', 'Starting colour', 'text', true, {
+        default: 'Default',
+        placeholder: 'For example, Black or Default',
+      }),
+      f('opening_quantity', 'Units physically in stock', 'number', true, {
+        min: 0,
+        step: '1',
+        help: 'Enter the number you physically counted. At least one unit is needed to publish now.',
+      }),
+      f('additional_variants', 'More sizes / colours (optional)', 'lines', false, {
+        full: true,
+        help: 'One option per line: Size | Colour | stock count. Example: Medium | Black | 4. Leave blank for one-size products.',
+      }),
+      f('product_photos', 'Product photographs', 'file', true, {
+        full: true,
+        multiple: true,
+        help: 'Choose up to 5 clear JPEG, PNG or WebP images, each under 5 MB.',
+      }),
     ],
   },
   uploadProductImage: {
@@ -105,7 +170,9 @@ export const actions: Record<string, Action> = {
       'Each physical size and colour combination needs a unique SKU. Stock remains unconfirmed until a physical opening count is recorded.',
     fields: [
       ref('product_id', 'Product', 'products'),
-      f('sku', 'Unique SKU', 'text', true),
+      f('sku', 'SKU (optional)', 'text', false, {
+        help: 'Leave blank and ASCEND will create a unique SKU automatically.',
+      }),
       f('size', 'Size', 'text', true),
       f('color', 'Colour', 'text', true),
       f('low_stock_threshold', 'Low-stock alert threshold', 'number', true, { min: 0, default: 5 }),
@@ -137,6 +204,23 @@ export const actions: Record<string, Action> = {
     ],
     confirm:
       'I have physically checked this quantity and understand that this stock movement is permanently recorded.',
+  },
+  removeStock: {
+    key: 'removeStock',
+    label: 'Remove stock',
+    description:
+      'Record units removed from physical stock. The quantity is subtracted and saved in the stock movement history.',
+    recordKey: 'variant_id',
+    owner: true,
+    fields: [
+      ref('variant_id', 'SKU / product option', 'variants'),
+      f('quantity', 'Units to remove', 'number', true, {
+        min: 1,
+        step: '1',
+      }),
+      f('note', 'Reason for removal', 'textarea', true, { full: true }),
+    ],
+    confirm: 'I have checked these units and want to remove them from physical stock.',
   },
   // Manual sales follow the same server stock and invoice rules as storefront checkout.
   createManualOrder: {
@@ -630,10 +714,11 @@ export const sections: Record<string, Section> = {
       { key: 'name', label: 'Product', type: 'product' },
       { key: 'category', label: 'Category' },
       { key: 'price', label: 'Price', type: 'money' },
-      { key: 'status', label: 'Visibility', type: 'status' },
+      { key: 'stock_available', label: 'Available stock' },
+      { key: 'status', label: 'Store status', type: 'status' },
     ],
     actions: ['saveProduct', 'saveCategory', 'saveVariant'],
-    rowActions: ['saveProduct', 'saveVariant', 'uploadProductImage'],
+    rowActions: ['saveProduct', 'saveVariant', 'uploadProductImage', 'archiveProduct'],
     filter: 'status',
   },
   inventory: {
@@ -650,8 +735,8 @@ export const sections: Record<string, Section> = {
       { key: 'stock_sold', label: 'Sold' },
       { key: 'stock_confirmed_at', label: 'Opening count', type: 'confirmed' },
     ],
-    actions: ['stockMovement', 'saveVariant'],
-    rowActions: ['stockMovement', 'saveVariant'],
+    actions: ['stockMovement', 'removeStock', 'saveVariant'],
+    rowActions: ['stockMovement', 'removeStock', 'saveVariant'],
   },
   orders: {
     title: 'From order to handover.',
@@ -662,6 +747,8 @@ export const sections: Record<string, Section> = {
     columns: [
       { key: 'order_number', label: 'Order', type: 'order' },
       { key: 'customer_name', label: 'Customer' },
+      { key: 'created_at', label: 'Order date', type: 'date' },
+      { key: 'items_summary', label: 'Items' },
       { key: 'total_amount', label: 'Total', type: 'money' },
       { key: 'payment_status', label: 'Payment', type: 'status' },
       { key: 'fulfillment_status', label: 'Fulfillment', type: 'status' },

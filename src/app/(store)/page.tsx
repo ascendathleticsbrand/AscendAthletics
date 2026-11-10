@@ -30,7 +30,7 @@ export default async function Home() {
       <section className="hero">
         <img
           className="hero-photo"
-          src={hero?.image_path || '/images/training-editorial.jpg'}
+          src="/images/ascend-home-hero.jpg"
           alt="Strength training in the gym"
           fetchPriority="high"
         />
@@ -62,11 +62,6 @@ export default async function Home() {
             </p>
           </div>
         </div>
-        {!hero?.image_path && (
-          <span className="photo-credit">
-            Editorial photography · Unsplash · Not the ASCEND coach
-          </span>
-        )}
       </section>
       {/* The three service promises introduce merchandise, coaching and fulfillment. */}
       <div className="values-strip">
