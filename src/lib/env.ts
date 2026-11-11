@@ -11,5 +11,8 @@ export function hasSupabaseConfig() {
 export function hasServiceConfig() {
   return hasSupabaseConfig() && Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
+export function hasPaystackConfig() {
+  return Boolean(process.env.PAYSTACK_SECRET_KEY?.trim());
+}
 export const setupMessage =
   'Connect Supabase and apply the database migrations to enable this feature.';

@@ -4,6 +4,7 @@
  */
 import { OrderStatus } from '@/components/store/order-status';
 import { getBusinessSettings } from '@/lib/catalog';
+import { hasPaystackConfig } from '@/lib/env';
 export const metadata = { title: 'Secure order status', robots: { index: false, follow: false } };
 export const dynamic = 'force-dynamic';
 export default async function OrderPage({
@@ -11,7 +12,7 @@ export default async function OrderPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ whatsapp?: string }>;
+  searchParams: Promise<{ whatsapp?: string; payment?: string }>;
 }) {
   const [{ token }, query, settings] = await Promise.all([
     params,
@@ -23,6 +24,14 @@ export default async function OrderPage({
       <OrderStatus
         token={token}
         autoWhatsApp={query.whatsapp === '1'}
+        paystackEnabled={hasPaystackConfig()}
+        paymentStatus={
+          query.payment === 'success'
+            ? 'success'
+            : query.payment === 'not-completed'
+              ? 'not-completed'
+              : undefined
+        }
         businessNumber={
           typeof settings.whatsapp_number === 'string' ? settings.whatsapp_number : undefined
         }

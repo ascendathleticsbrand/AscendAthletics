@@ -59,14 +59,19 @@ export function OrderStatus({
   token,
   autoWhatsApp = false,
   businessNumber,
+  paystackEnabled = false,
+  paymentStatus,
 }: {
   token: string;
   autoWhatsApp?: boolean;
   businessNumber?: string;
+  paystackEnabled?: boolean;
+  paymentStatus?: 'success' | 'not-completed';
 }) {
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [paystackBusy, setPaystackBusy] = useState(false);
   const currentToken = useRef(token);
   currentToken.current = token;
   const load = async () => {
@@ -129,6 +134,16 @@ export function OrderStatus({
       <div className="notice">
         Keep this secure link private and save it to check payment and fulfillment updates.
       </div>
+      {paymentStatus === 'success' && (
+        <div className="notice" role="status">
+          Paystack confirmed your payment. The order status below has been refreshed.
+        </div>
+      )}
+      {paymentStatus === 'not-completed' && (
+        <div className="notice" role="status">
+          Payment was not confirmed. You can retry Paystack or use the bank transfer option below.
+        </div>
+      )}
       <OrderWhatsAppHandoff
         snapshot={data}
         token={token}
@@ -288,6 +303,35 @@ export function OrderStatus({
         </div>
         <aside>
           <div className="panel">
+            {paystackEnabled && payable && Number(invoice.outstanding_amount) > 0 && (
+              <div style={{ marginBottom: 26 }}>
+                <h2>Pay online</h2>
+                <p>Pay securely with Paystack using the payment methods available at checkout.</p>
+                <button
+                  className="button"
+                  type="button"
+                  disabled={paystackBusy}
+                  onClick={async () => {
+                    setPaystackBusy(true);
+                    setError('');
+                    try {
+                      const result = await api<{ authorization_url: string }>(
+                        '/api/paystack/initialize',
+                        { token },
+                      );
+                      window.location.assign(result.authorization_url);
+                    } catch (err) {
+                      setError(
+                        err instanceof Error ? err.message : 'Unable to start Paystack checkout.',
+                      );
+                      setPaystackBusy(false);
+                    }
+                  }}
+                >
+                  {paystackBusy ? 'Connecting to Paystack…' : 'Pay with Paystack'}
+                </button>
+              </div>
+            )}
             <h2>Bank transfer instructions</h2>
             {payable && bank?.bank_account_number ? (
               <>
