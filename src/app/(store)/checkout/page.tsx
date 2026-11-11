@@ -3,7 +3,7 @@
  * The form receives pickup details and whether the server has the required checkout configuration.
  */
 import { getBusinessSettings } from '@/lib/catalog';
-import { hasServiceConfig } from '@/lib/env';
+import { hasPaystackConfig, hasServiceConfig } from '@/lib/env';
 import { CheckoutForm } from '@/components/store/checkout-form';
 export const metadata = { title: 'Checkout', robots: { index: false, follow: false } };
 export const dynamic = 'force-dynamic';
@@ -15,11 +15,15 @@ export default async function Checkout() {
         <div className="container">
           <p className="eyebrow">ONE STEP CLOSER</p>
           <h1>CHECKOUT.</h1>
-          <p>Guest checkout. Secure order lookup. Bank transfer with manual confirmation.</p>
+          <p>Guest checkout. Choose Paystack or bank transfer before continuing.</p>
         </div>
       </div>
       <div className="container page-body">
-        <CheckoutForm settings={settings} configured={hasServiceConfig()} />
+        <CheckoutForm
+          settings={settings}
+          configured={hasServiceConfig()}
+          paystackEnabled={hasPaystackConfig()}
+        />
       </div>
     </>
   );

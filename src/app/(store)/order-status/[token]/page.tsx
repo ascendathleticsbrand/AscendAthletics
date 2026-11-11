@@ -1,6 +1,6 @@
 /**
  * Private order route: passes the lookup token and public WhatsApp settings to OrderStatus.
- * The one-time whatsapp query flag requests a handoff after the saved order has loaded.
+ * Payment completion status is shown after the provider callback returns.
  */
 import { OrderStatus } from '@/components/store/order-status';
 import { getBusinessSettings } from '@/lib/catalog';
@@ -12,7 +12,7 @@ export default async function OrderPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ whatsapp?: string; payment?: string }>;
+  searchParams: Promise<{ payment?: string }>;
 }) {
   const [{ token }, query, settings] = await Promise.all([
     params,
@@ -23,7 +23,6 @@ export default async function OrderPage({
     <div className="container page-body">
       <OrderStatus
         token={token}
-        autoWhatsApp={query.whatsapp === '1'}
         paystackEnabled={hasPaystackConfig()}
         paymentStatus={
           query.payment === 'success'

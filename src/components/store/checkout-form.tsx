@@ -2,7 +2,7 @@
 
 /**
  * Guest checkout: collects customer details and an explicit pickup or delivery choice.
- * Creates the order through the server API, then opens its saved invoice page for the WhatsApp handoff.
+ * Creates the order through the server API, then continues to the selected payment method.
  */
 
 import { useId, useRef, useState, type FormEvent } from 'react';
@@ -57,18 +57,24 @@ const states = [
 export function CheckoutForm({
   settings,
   configured,
+  paystackEnabled = false,
 }: {
   settings: PublicSettings;
   configured: boolean;
+  paystackEnabled?: boolean;
 }) {
   const { items, ready, subtotal, clear } = useCart();
   const router = useRouter();
   const id = useId();
   const submitting = useRef(false);
   const [method, setMethod] = useState<'pickup' | 'delivery' | ''>('');
+  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'paystack' | ''>(
+    paystackEnabled ? '' : 'bank_transfer',
+  );
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [savedWithoutLink, setSavedWithoutLink] = useState(false);
+  const [savedOrderUrl, setSavedOrderUrl] = useState<string | null>(null);
   const pickupLocation =
     typeof settings.pickup_location === 'string' ? settings.pickup_location.trim() : '';
   const businessNumber =
@@ -76,6 +82,10 @@ export function CheckoutForm({
 
   function selectMethod(next: 'pickup' | 'delivery') {
     setMethod(next);
+    setError('');
+  }
+  function selectPaymentMethod(next: 'bank_transfer' | 'paystack') {
+    setPaymentMethod(next);
     setError('');
   }
   // A ref blocks duplicate submissions before React has rendered the busy state.
@@ -90,6 +100,11 @@ export function CheckoutForm({
       setError(
         'Pickup needs a confirmed location. Choose nationwide delivery, or contact ASCEND to arrange pickup.',
       );
+      return;
+    }
+    const selectedPayment = paystackEnabled ? paymentMethod : 'bank_transfer';
+    if (!selectedPayment) {
+      setError('Choose Paystack or bank transfer.');
       return;
     }
     const form = new FormData(event.currentTarget);
@@ -126,7 +141,35 @@ export function CheckoutForm({
       }
       // Clear the local bag only after receiving the private link for the saved order.
       clear();
-      router.replace(`/order-status/${data.guest_token}?whatsapp=1`);
+      const orderUrl = `/order-status/${data.guest_token}`;
+      if (selectedPayment === 'paystack') {
+        // Delivery orders with an unconfirmed quote must wait for approval before checkout.
+        if (data.order?.delivery_status !== 'approved' || data.invoice?.total_amount == null) {
+          router.replace(orderUrl);
+          return;
+        }
+        try {
+          const payment = await api<{ authorization_url: string }>('/api/paystack/initialize', {
+            token: data.guest_token,
+          });
+          if (
+            typeof payment?.authorization_url !== 'string' ||
+            !payment.authorization_url.startsWith('https://checkout.paystack.com/')
+          )
+            throw new Error('Paystack did not return a valid checkout link.');
+          window.location.assign(payment.authorization_url);
+        } catch (err) {
+          setSavedWithoutLink(true);
+          setSavedOrderUrl(orderUrl);
+          setError(
+            err instanceof Error
+              ? `Your order is saved, but Paystack could not start. Open your saved order to retry or use bank transfer. ${err.message}`
+              : 'Your order is saved, but Paystack could not start. Open your saved order to retry or use bank transfer.',
+          );
+        }
+        return;
+      }
+      router.replace(orderUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Checkout is unavailable. Please try again.');
     } finally {
@@ -341,6 +384,52 @@ export function CheckoutForm({
               </div>
             </fieldset>
           </div>
+          <div className="panel form-group">
+            <fieldset disabled={busy}>
+              <legend>How would you like to pay?</legend>
+              <p id={`${id}-payment-help`}>Choose your payment method before placing the order.</p>
+              <div className="fulfillment-options">
+                {paystackEnabled && (
+                  <label className="radio-card fulfillment-option" htmlFor={`${id}-paystack`}>
+                    <input
+                      id={`${id}-paystack`}
+                      type="radio"
+                      name="payment_method"
+                      value="paystack"
+                      required
+                      checked={paymentMethod === 'paystack'}
+                      aria-describedby={`${id}-payment-help`}
+                      onChange={() => selectPaymentMethod('paystack')}
+                    />
+                    <span>
+                      <strong className="fulfillment-title">Pay with Paystack</strong>
+                      <span className="fulfillment-description">
+                        Pay online now. After confirmation, you can send the receipt details to ASCEND on WhatsApp.
+                      </span>
+                    </span>
+                  </label>
+                )}
+                <label className="radio-card fulfillment-option" htmlFor={`${id}-bank-transfer`}>
+                  <input
+                    id={`${id}-bank-transfer`}
+                    type="radio"
+                    name="payment_method"
+                    value="bank_transfer"
+                    required={paystackEnabled}
+                    checked={paymentMethod === 'bank_transfer'}
+                    aria-describedby={`${id}-payment-help`}
+                    onChange={() => selectPaymentMethod('bank_transfer')}
+                  />
+                  <span>
+                    <strong className="fulfillment-title">Bank transfer</strong>
+                    <span className="fulfillment-description">
+                      View ASCEND’s bank details and optionally send your order invoice on WhatsApp.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+          </div>
         </div>
         <aside>
           <div className="panel">
@@ -372,8 +461,9 @@ export function CheckoutForm({
               <span>{money(subtotal)}</span>
             </div>
             <p>
-              Your order is saved first, then WhatsApp opens with your invoice and secure order link
-              addressed to ASCEND. Review the message and press Send in WhatsApp.
+              {paymentMethod === 'paystack'
+                ? 'You’ll go to Paystack after your order is saved. Once payment is confirmed, you can send the receipt details to ASCEND on WhatsApp.'
+                : 'Your order is saved before payment. Bank transfer instructions and an optional WhatsApp invoice link appear on your secure order page.'}
             </p>
             <p>
               Available stock is reserved temporarily. Bank instructions appear on your secure order
@@ -391,9 +481,20 @@ export function CheckoutForm({
               disabled={busy || !configured || savedWithoutLink}
               style={{ width: '100%' }}
             >
-              {busy ? 'Saving your order...' : 'Create order & continue to WhatsApp'}
+              {busy
+                ? 'Saving your order...'
+                : paymentMethod === 'paystack'
+                  ? 'Create order & pay with Paystack'
+                  : 'Create order & view bank transfer'}
               <ArrowRight size={16} />
             </button>
+            {savedOrderUrl && (
+              <p>
+                <Link className="text-link" href={savedOrderUrl}>
+                  Open your saved order to continue
+                </Link>
+              </p>
+            )}
             <p
               style={{
                 margin: '18px 0 0',
@@ -404,7 +505,9 @@ export function CheckoutForm({
               }}
             >
               <ShieldCheck size={15} />
-              Manual bank transfer | Owner verification
+              {paymentMethod === 'paystack'
+                ? 'Paystack online payment | Server-verified'
+                : 'Bank transfer | ASCEND verifies your payment'}
             </p>
           </div>
         </aside>

@@ -11,6 +11,7 @@ import { Package, ArrowUpRight, ShieldCheck } from 'lucide-react';
 import { api } from './request';
 import { EvidenceForm } from './evidence-form';
 import { OrderWhatsAppHandoff } from './order-whatsapp-handoff';
+import { PaystackReceiptHandoff } from './paystack-receipt-handoff';
 import { secureOrderToken, deliveryQuoteTotal } from './client-values';
 import { money, businessDate, label, whatsapp } from '@/lib/format';
 /** Validate the entered private token before routing to the order page. */
@@ -57,13 +58,11 @@ export function OrderLookup() {
 /** Reload the current token snapshot after quote approval or payment-evidence submission. */
 export function OrderStatus({
   token,
-  autoWhatsApp = false,
   businessNumber,
   paystackEnabled = false,
   paymentStatus,
 }: {
   token: string;
-  autoWhatsApp?: boolean;
   businessNumber?: string;
   paystackEnabled?: boolean;
   paymentStatus?: 'success' | 'not-completed';
@@ -120,6 +119,12 @@ export function OrderStatus({
     order.fulfillment_status !== 'cancelled';
   const needsQuote = order.fulfillment_method === 'delivery' && order.delivery_status === 'pending';
   const quoted = order.fulfillment_method === 'delivery' && order.delivery_status === 'quoted';
+  const paystackPaid = payments.some(
+    (payment: any) =>
+      payment.status === 'verified' &&
+      typeof payment.transfer_reference === 'string' &&
+      payment.transfer_reference.toLowerCase().startsWith('paystack:asc_'),
+  );
   const proposedTotal = quoted ? deliveryQuoteTotal(order.subtotal, order.delivery_fee) : null;
   const displayedTotal = quoted ? proposedTotal : invoice.total_amount;
   return (
@@ -144,12 +149,6 @@ export function OrderStatus({
           Payment was not confirmed. You can retry Paystack or use the bank transfer option below.
         </div>
       )}
-      <OrderWhatsAppHandoff
-        snapshot={data}
-        token={token}
-        autoOpen={autoWhatsApp}
-        businessNumber={businessNumber}
-      />
       {error && (
         <p role="alert" className="form-feedback error">
           {error}
@@ -159,6 +158,17 @@ export function OrderStatus({
         <div className="notice danger-notice">
           This order needs owner review because stock availability changed. Please contact ASCEND
           before arranging collection or delivery.
+        </div>
+      )}
+      {paystackPaid && (
+        <div style={{ marginBottom: 24 }}>
+          <PaystackReceiptHandoff
+            token={token}
+            orderNumber={order.order_number}
+            invoiceNumber={invoice.invoice_number || invoice.id}
+            amountPaid={invoice.amount_paid || invoice.total_amount}
+            businessNumber={businessNumber}
+          />
         </div>
       )}
       <div className="two-column">
@@ -332,6 +342,13 @@ export function OrderStatus({
                 </button>
               </div>
             )}
+            {paystackPaid ? (
+              <div>
+                <h2>Payment confirmed by Paystack</h2>
+                <p>Your verified Paystack payment is recorded. No bank transfer is needed.</p>
+              </div>
+            ) : (
+              <>
             <h2>Bank transfer instructions</h2>
             {payable && bank?.bank_account_number ? (
               <>
@@ -364,6 +381,13 @@ export function OrderStatus({
                     onSuccess={load}
                   />
                 )}
+                <div style={{ marginTop: 22 }}>
+                  <OrderWhatsAppHandoff
+                    snapshot={data}
+                    token={token}
+                    businessNumber={businessNumber}
+                  />
+                </div>
               </>
             ) : (
               <p>
@@ -373,6 +397,8 @@ export function OrderStatus({
                     ? 'Your payment has been verified.'
                     : 'Bank transfer instructions are awaiting configuration. Contact ASCEND before making a transfer.'}
               </p>
+            )}
+              </>
             )}
             {order.fulfillment_method === 'pickup' && bank?.pickup_location && (
               <div style={{ marginTop: 24 }}>
