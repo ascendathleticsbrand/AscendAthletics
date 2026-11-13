@@ -31,7 +31,13 @@ export type OrderWhatsAppSnapshot = {
     quantity: Amount;
     unit_price: Amount;
   }[];
-  bank_details?: { pickup_location?: string | null } | null;
+  bank_details?: {
+    pickup_location?: string | null;
+    bank_name?: string | null;
+    bank_account_number?: string | null;
+    bank_account_holder?: string | null;
+    payment_instructions?: string | null;
+  } | null;
 };
 
 // Keep the handoff usable for large carts and messaging/browser URL limits.
@@ -142,6 +148,17 @@ export function buildOrderWhatsApp(
     `Delivery fee: ${needsQuote ? 'Awaiting delivery quote' : needsApproval ? `${amount(order.delivery_fee)} (awaiting approval)` : amount(order.delivery_fee)}`,
     `Total: ${needsQuote ? 'Awaiting delivery quote' : needsApproval ? 'Awaiting delivery quote approval' : amount(invoice.total_amount)}`,
     `Payment: ${paymentStatus(invoice.payment_status)}`,
+    ...(bank?.bank_account_number
+      ? [
+          '',
+          'Bank transfer details:',
+          `Bank: ${text(bank.bank_name, 120)}`,
+          `Account number: ${text(bank.bank_account_number, 80)}`,
+          `Account name: ${text(bank.bank_account_holder, 180)}`,
+          `Transfer narration: ${text(order.order_number, 100)}`,
+          ...(bank.payment_instructions ? [text(bank.payment_instructions, 500)] : []),
+        ]
+      : []),
     '',
     'Private order / complete invoice link (share only with ASCEND):',
     privateLink,

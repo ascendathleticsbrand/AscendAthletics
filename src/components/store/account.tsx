@@ -10,7 +10,6 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { api } from './request';
 import { money, businessDate, label, whatsapp } from '@/lib/format';
-import { EvidenceForm } from './evidence-form';
 import { safeInternalPath, secureOrderToken, embeddedInvoice } from './client-values';
 import type { CoachingPackage } from '@/lib/backend/types';
 /** Submit credentials to the auth API; follow only a validated internal destination after sign-in. */
@@ -162,8 +161,15 @@ export function AuthForm({
   );
 }
 /** Request a package enrollment; the owner still verifies payment and confirms the training start. */
-export function EnrollmentRequest({ pkg, profile }: { pkg: CoachingPackage; profile: any }) {
-  const router = useRouter();
+export function EnrollmentRequest({
+  pkg,
+  profile,
+  bank,
+}: {
+  pkg: CoachingPackage;
+  profile: any;
+  bank: any;
+}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -189,17 +195,37 @@ export function EnrollmentRequest({ pkg, profile }: { pkg: CoachingPackage; prof
           setError('');
           const f = new FormData(e.currentTarget);
           try {
-            await api('/api/coaching/enroll', {
+            const result = await api<{ enrollment: any; invoice: any }>('/api/coaching/enroll', {
               package_id: pkg.id,
               name: f.get('name'),
               phone: f.get('phone'),
               preferences: { goal: f.get('goal'), schedule: f.get('schedule') || '' },
             });
-            setMessage(
-              'Enrollment requested. Submit your transfer information below; training starts after payment verification and coach approval.',
-            );
-            router.replace('/account');
-            router.refresh();
+            const invoice = result.invoice;
+            const message = [
+              'Hi ASCEND ATHLETICS, I requested coaching and would like to pay by bank transfer.',
+              `Customer: ${String(f.get('name') || '')}`,
+              `Phone: ${String(f.get('phone') || '')}`,
+              `Coaching plan: ${result.enrollment?.package_name || pkg.name}`,
+              `Invoice: ${invoice?.invoice_number || invoice?.id || 'See my ASCEND account'}`,
+              `Amount due: ${money(invoice?.total_amount ?? pkg.price_ngn)}`,
+              ...(bank?.bank_account_number
+                ? [
+                    '',
+                    'Bank transfer details:',
+                    `Bank: ${bank.bank_name || ''}`,
+                    `Account number: ${bank.bank_account_number}`,
+                    `Account name: ${bank.bank_account_holder || bank.account_holder || ''}`,
+                    `Transfer narration: ${invoice?.invoice_number || invoice?.id || 'Coaching invoice'}`,
+                    ...(bank.payment_instructions ? [bank.payment_instructions] : []),
+                  ]
+                : ['Please send me the bank transfer details.']),
+              '',
+              'I will reply here with my transfer confirmation after I pay. Coaching starts after ASCEND verifies payment and confirms my start date.',
+              `My account: ${new URL('/account', window.location.origin).href}`,
+            ].join('\n');
+            setMessage('Your coaching invoice is ready. WhatsApp is opening with the bank details.');
+            window.location.assign(whatsapp(message));
           } catch (err) {
             setError(err instanceof Error ? err.message : 'Unable to request enrollment.');
           } finally {
@@ -318,7 +344,9 @@ export function AccountDashboard({
       <p role="status" className="form-feedback">
         {message}
       </p>
-      {selectedPackage && <EnrollmentRequest pkg={selectedPackage} profile={account.profile} />}
+      {selectedPackage && (
+        <EnrollmentRequest pkg={selectedPackage} profile={account.profile} bank={bank} />
+      )}
       <div className="two-column">
         <div>
           {account.enrollments.length === 0 ? (
@@ -397,10 +425,44 @@ export function AccountDashboard({
                     invoice.outstanding_amount > 0 &&
                     bank?.bank_account_number &&
                     e.status !== 'cancelled' && (
-                      <EvidenceForm
-                        endpoint={`/api/coaching/${e.id}/evidence`}
-                        invoiceId={invoice.id}
-                      />
+                      <div className="notice">
+                        <h3>Bank transfer details</h3>
+                        <p>
+                          Bank: <strong>{bank.bank_name}</strong>
+                          <br />
+                          Account number: <strong>{bank.bank_account_number}</strong>
+                          <br />
+                          Account name: <strong>{bank.bank_account_holder || bank.account_holder}</strong>
+                          <br />
+                          Amount due: <strong>{money(invoice.outstanding_amount)}</strong>
+                          <br />
+                          Transfer narration: <strong>{invoice.invoice_number || invoice.id}</strong>
+                        </p>
+                        {bank.payment_instructions && <p>{bank.payment_instructions}</p>}
+                        <p>
+                          After transferring, send your invoice and payment confirmation to ASCEND on
+                          WhatsApp. Your coaching starts after payment and start-date verification.
+                        </p>
+                        <a
+                          className="button small"
+                          target="_blank"
+                          rel="noreferrer"
+                          href={whatsapp(
+                            [
+                          'Hi ASCEND ATHLETICS, I am arranging payment for my coaching invoice by bank transfer.',
+                              `Plan: ${e.package_name}`,
+                              `Invoice: ${invoice.invoice_number || invoice.id}`,
+                              `Amount due: ${money(invoice.outstanding_amount)}`,
+                              `Bank: ${bank.bank_name || ''}`,
+                              `Account number: ${bank.bank_account_number}`,
+                              `Account name: ${bank.bank_account_holder || bank.account_holder || ''}`,
+                              `Transfer narration: ${invoice.invoice_number || invoice.id}`,
+                            ].join('\n'),
+                          )}
+                        >
+                          Continue to WhatsApp <ArrowUpRight size={15} />
+                        </a>
+                      </div>
                     )}
                   <div className="button-row">
                     {['active', 'expired'].includes(e.status) &&
@@ -415,7 +477,7 @@ export function AccountDashboard({
                             run(
                               `/api/coaching/${e.id}/renew`,
                               {},
-                              'Renewal requested. Review the new pending plan and submit payment evidence.',
+                              'Renewal requested. Review the new invoice and send your transfer confirmation to ASCEND on WhatsApp.',
                             )
                           }
                         >
@@ -496,8 +558,8 @@ export function AccountDashboard({
                 </div>
                 <p style={{ marginTop: 20 }}>{bank.payment_instructions}</p>
                 <p>
-                  Your receipt is evidence of a claim. The owner verifies actual receipt of funds
-                  before approval.
+                  After transferring, send your payment confirmation to ASCEND on WhatsApp. Coaching
+                  starts after payment verification and start-date confirmation.
                 </p>
               </>
             ) : (

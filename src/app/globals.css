@@ -269,6 +269,8 @@ img {
   background: var(--gold);
 }
 .button {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -282,11 +284,50 @@ img {
   letter-spacing: 0.07em;
   text-transform: uppercase;
   min-height: 52px;
+  box-shadow: 0 0 0 rgba(201, 163, 106, 0);
+  transition:
+    color 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.3s ease,
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.button::after {
+  content: '';
+  position: absolute;
+  inset: -150% auto -150% -35%;
+  width: 28%;
+  background: linear-gradient(90deg, transparent, #ffffff70, transparent);
+  transform: translateX(-180%) rotate(20deg);
+  pointer-events: none;
+  transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .button:hover {
   background: #d8b580;
   border-color: #d8b580;
-  transform: translateY(-2px);
+  box-shadow: 0 9px 24px #c9a36a35;
+  transform: translateY(-3px) scale(1.015);
+}
+.button:hover::after {
+  transform: translateX(560%) rotate(20deg);
+}
+.button:active {
+  box-shadow: 0 3px 10px #c9a36a2b;
+  transform: translateY(-1px) scale(0.985);
+  transition-duration: 0.08s;
+}
+.button svg {
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.button:hover svg {
+  transform: translateX(3px);
+}
+.button:disabled:hover {
+  box-shadow: none;
+  transform: none;
+}
+.button:disabled:hover::after {
+  transform: translateX(-180%) rotate(20deg);
 }
 .button.secondary {
   background: transparent;
@@ -294,8 +335,15 @@ img {
   border-color: #6c6b65;
 }
 .button.secondary:hover {
-  border-color: var(--white);
-  background: #ffffff08;
+  border-color: var(--gold);
+  background: #c9a36a12;
+  box-shadow: 0 8px 22px #c9a36a1c;
+  color: #e3c18f;
+}
+.button.secondary:disabled:hover {
+  border-color: #6c6b65;
+  background: transparent;
+  color: var(--white);
 }
 .button.small {
   padding: 12px 17px;
@@ -1785,6 +1833,18 @@ textarea.field {
   * {
     scroll-behavior: auto !important;
     transition: none !important;
+  }
+  .button:hover,
+  .button:active,
+  .button:focus-visible {
+    box-shadow: none;
+    transform: none;
+  }
+  .button:hover::after {
+    transform: translateX(-180%) rotate(20deg);
+  }
+  .button:hover svg {
+    transform: none;
   }
 }
 

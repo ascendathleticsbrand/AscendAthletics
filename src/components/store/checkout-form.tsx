@@ -12,6 +12,7 @@ import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { useCart } from './cart-context';
 import { api } from './request';
 import { money, whatsapp } from '@/lib/format';
+import { buildOrderWhatsApp, type OrderWhatsAppSnapshot } from './order-whatsapp';
 import type { PublicSettings } from '@/lib/backend/types';
 
 const states = [
@@ -142,6 +143,21 @@ export function CheckoutForm({
       // Clear the local bag only after receiving the private link for the saved order.
       clear();
       const orderUrl = `/order-status/${data.guest_token}`;
+      if (selectedPayment === 'bank_transfer') {
+        try {
+          const snapshot = await api<OrderWhatsAppSnapshot>(`/api/orders/${data.guest_token}`);
+          const prepared = buildOrderWhatsApp(
+            snapshot,
+            new URL(orderUrl, window.location.origin).href,
+            businessNumber,
+          );
+          window.location.assign(prepared.url);
+        } catch {
+          // The order is already saved; keep its private page as a fallback if WhatsApp cannot open.
+          router.replace(orderUrl);
+        }
+        return;
+      }
       if (selectedPayment === 'paystack') {
         // Delivery orders with an unconfirmed quote must wait for approval before checkout.
         if (data.order?.delivery_status !== 'approved' || data.invoice?.total_amount == null) {
@@ -423,7 +439,8 @@ export function CheckoutForm({
                   <span>
                     <strong className="fulfillment-title">Bank transfer</strong>
                     <span className="fulfillment-description">
-                      View ASCEND’s bank details and optionally send your order invoice on WhatsApp.
+                        WhatsApp opens with your invoice and ASCEND's account details. Review it and
+                        press Send.
                     </span>
                   </span>
                 </label>
@@ -466,8 +483,8 @@ export function CheckoutForm({
                 : 'Your order is saved before payment. Bank transfer instructions and an optional WhatsApp invoice link appear on your secure order page.'}
             </p>
             <p>
-              Available stock is reserved temporarily. Bank instructions appear on your secure order
-              page once the total is confirmed.
+              Your secure order page keeps your invoice and order status available if you need it
+              later.
             </p>
             <label className="check-label">
               <input type="checkbox" required />I agree to the <Link href="/terms">terms</Link> and
@@ -485,7 +502,7 @@ export function CheckoutForm({
                 ? 'Saving your order...'
                 : paymentMethod === 'paystack'
                   ? 'Create order & pay with Paystack'
-                  : 'Create order & view bank transfer'}
+                  : 'Create order & continue to WhatsApp'}
               <ArrowRight size={16} />
             </button>
             {savedOrderUrl && (

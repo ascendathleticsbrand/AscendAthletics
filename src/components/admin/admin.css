@@ -362,7 +362,9 @@
   color: #cbcbce;
   transition:
     background 0.15s,
-    border-color 0.15s;
+    border-color 0.15s,
+    box-shadow 0.25s ease,
+    transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .admin-button-gold {
   background: #c9a36a;
@@ -372,6 +374,15 @@
 .admin-button-gold:hover {
   background: #d4b17f;
   border-color: #d4b17f;
+}
+.admin-button:hover {
+  box-shadow: 0 7px 18px #c9a36a20;
+  transform: translateY(-2px);
+}
+.admin-button:active {
+  box-shadow: none;
+  transform: translateY(0) scale(0.98);
+  transition-duration: 0.08s;
 }
 .admin-button-subtle:hover {
   border-color: #6e604c;
@@ -397,6 +408,13 @@
 .admin-icon-button:hover {
   border-color: #626266;
   color: #d6d6d8;
+  box-shadow: 0 5px 14px #0006;
+  transform: translateY(-2px);
+}
+.admin-icon-button:active {
+  box-shadow: none;
+  transform: scale(0.96);
+  transition-duration: 0.08s;
 }
 .admin-setup-banner {
   display: flex;
@@ -2327,6 +2345,13 @@
   .admin-dialog * {
     animation: none !important;
     transition: none !important;
+  }
+  .admin-button:hover,
+  .admin-button:active,
+  .admin-icon-button:hover,
+  .admin-icon-button:active {
+    box-shadow: none;
+    transform: none;
   }
 }
 .admin-proof-empty {

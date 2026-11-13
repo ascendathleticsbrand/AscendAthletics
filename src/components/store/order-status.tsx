@@ -2,14 +2,13 @@
 
 /**
  * Private order views: accept a lookup link, load the saved invoice and show fulfillment updates.
- * Delivery quote approval and payment evidence call token-protected APIs, then reload the authoritative records.
+ * Delivery quote approval calls a token-protected API, then reloads authoritative order records.
  */
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Package, ArrowUpRight, ShieldCheck } from 'lucide-react';
 import { api } from './request';
-import { EvidenceForm } from './evidence-form';
 import { OrderWhatsAppHandoff } from './order-whatsapp-handoff';
 import { PaystackReceiptHandoff } from './paystack-receipt-handoff';
 import { secureOrderToken, deliveryQuoteTotal } from './client-values';
@@ -55,7 +54,7 @@ export function OrderLookup() {
     </form>
   );
 }
-/** Reload the current token snapshot after quote approval or payment-evidence submission. */
+/** Reload the current token snapshot after quote approval. */
 export function OrderStatus({
   token,
   businessNumber,
@@ -373,14 +372,6 @@ export function OrderStatus({
                       ? 'A refund has been recorded.'
                       : 'Payment pending — awaiting verification.'}
                 </p>
-                {Number(invoice.outstanding_amount) > 0 && (
-                  <EvidenceForm
-                    endpoint={`/api/orders/${token}/evidence`}
-                    invoiceId={invoice.id}
-                    guestToken={token}
-                    onSuccess={load}
-                  />
-                )}
                 <div style={{ marginTop: 22 }}>
                   <OrderWhatsAppHandoff
                     snapshot={data}
