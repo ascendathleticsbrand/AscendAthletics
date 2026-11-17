@@ -43,6 +43,13 @@ export async function Footer() {
         </div>
         <div>
           <h3>Keep moving</h3>
+          {settings.pickup_location && (
+            <p className="footer-location">
+              <strong>Visit / pickup</strong>
+              <br />
+              {settings.pickup_location}
+            </p>
+          )}
           <a
             href={whatsapp('Hi ASCEND ATHLETICS, I’d like to learn more.', phone)}
             target="_blank"

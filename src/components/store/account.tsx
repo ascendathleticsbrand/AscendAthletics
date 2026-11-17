@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Eye, EyeOff } from 'lucide-react';
 import { api } from './request';
 import { money, businessDate, label, whatsapp } from '@/lib/format';
 import { safeInternalPath, secureOrderToken, embeddedInvoice } from './client-values';
@@ -25,6 +25,9 @@ export function AuthForm({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   return (
     <div className="panel login-box">
       <div className="tabs">
@@ -72,12 +75,24 @@ export function AuthForm({
               next: safeInternalPath(next),
               ...(mode === 'signUp' ? { name: f.get('name'), phone: f.get('phone') } : {}),
             });
+            if (mode === 'signUp') {
+              setMode('signIn');
+              setPassword('');
+              setShowPassword(false);
+              setMessage(data.message || 'Account created. Sign in with your new account.');
+              return;
+            }
             if (data.signedIn) {
               router.push(safeInternalPath(next));
               router.refresh();
             } else setMessage(data.message || 'Check your email to confirm your account.');
           } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unable to sign in.');
+            const errorMessage = err instanceof Error ? err.message : 'Unable to sign in.';
+            if (mode === 'signUp' && errorMessage.startsWith('Account created, but')) {
+              setMode('signIn');
+              setPassword('');
+              setMessage(errorMessage);
+            } else setError(errorMessage);
           } finally {
             setBusy(false);
           }
@@ -117,21 +132,36 @@ export function AuthForm({
             type="email"
             name="email"
             autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
             required
             maxLength={254}
           />
         </label>
         <label className="form-group" style={{ display: 'block' }}>
           <span className="field-label">Password (at least 8 characters)</span>
-          <input
-            className="field"
-            type="password"
-            name="password"
-            autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
-            required
-            minLength={8}
-            maxLength={128}
-          />
+          <span className="password-input-wrap">
+            <input
+              className="field"
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+              minLength={8}
+              maxLength={128}
+            />
+            <button
+              type="button"
+              className="password-visibility-toggle"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+              onClick={() => setShowPassword((visible) => !visible)}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </span>
         </label>
         {mode === 'signUp' && (
           <label className="check-label">

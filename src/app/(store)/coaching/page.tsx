@@ -3,6 +3,7 @@
  * Package links lead to account enrollment; payment verification and activation happen separately.
  */
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, Monitor, Check, ArrowUpRight } from 'lucide-react';
 import { getCoachingPackages, getPublicContent } from '@/lib/catalog';
 import { money, whatsapp, label } from '@/lib/format';
@@ -33,9 +34,12 @@ export default async function Coaching() {
           </a>
         </div>
         <div className="editorial-image">
-          <img
+          <Image
             src={content.coach?.image_path || '/images/gym-editorial.jpg'}
             alt={content.coach?.image_path ? 'ASCEND coach' : 'Editorial training space'}
+            fill
+            sizes="(max-width: 760px) 100vw, 50vw"
+            quality={85}
           />
           {!content.coach?.image_path && (
             <span className="photo-credit">Editorial photography · Unsplash</span>

@@ -3,6 +3,7 @@
  * Editorial images and copy provide the existing fallback when content is not configured.
  */
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowUpRight } from 'lucide-react';
 import { getPublicContent } from '@/lib/catalog';
 export const metadata = { title: 'Our story' };
@@ -24,9 +25,12 @@ export default async function About() {
       <div className="container page-body">
         <div className="coaching-hero" style={{ paddingTop: 0 }}>
           <div className="editorial-image">
-            <img
+            <Image
               src={content.about?.image_path || '/images/gym-editorial.jpg'}
               alt={content.about?.image_path ? 'ASCEND ATHLETICS' : 'Editorial gym space'}
+              fill
+              sizes="(max-width: 760px) 100vw, 50vw"
+              quality={85}
             />
             {!content.about?.image_path && (
               <span className="photo-credit">Editorial photography · Unsplash</span>

@@ -6,6 +6,7 @@
  */
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Minus, Plus, ShoppingBag, Shirt, ArrowUpRight } from 'lucide-react';
 import type { Product } from '@/lib/backend/types';
 import { money, whatsapp } from '@/lib/format';
@@ -25,7 +26,15 @@ export function ProductDetail({ product }: { product: Product }) {
     <div className="product-detail">
       <div className="product-gallery">
         {product.images[photo] ? (
-          <img src={product.images[photo]} alt={product.name} className="main-product-image" />
+          <Image
+            src={product.images[photo]}
+            alt={product.name}
+            className="main-product-image"
+            width={1000}
+            height={1250}
+            sizes="(max-width: 900px) 100vw, 50vw"
+            quality={85}
+          />
         ) : (
           <div className="empty-state">
             <Shirt size={80} />
@@ -40,7 +49,7 @@ export function ProductDetail({ product }: { product: Product }) {
                 onClick={() => setPhoto(i)}
                 key={i}
               >
-                <img src={url} alt="" />
+                <Image src={url} alt="" width={120} height={150} quality={75} />
               </button>
             ))}
           </div>

@@ -53,12 +53,22 @@ export async function POST(request: Request) {
     });
     if (error)
       throw new AppError('Your account could not be created. Check your details and try again.');
+    // Sign-up may return a session when email confirmation is disabled. Keep the
+    // customer on the sign-in flow by clearing only this newly-created session.
+    if (data.session) {
+      const { error: signOutError } = await db.auth.signOut({ scope: 'local' });
+      if (signOutError)
+        throw new AppError(
+          'Account created, but automatic sign-out failed. Please sign out, then sign in with your new account.',
+          500,
+        );
+    }
     return {
-      signedIn: Boolean(data.session),
+      signedIn: false,
       next: safeAuthNext(input.next),
       message: data.session
-        ? 'Your account is ready.'
-        : 'Check your email to confirm your coaching account.',
+        ? 'Account created. Sign in with your new email and password.'
+        : 'Account created. Check your email to confirm it, then sign in.',
     };
   });
 }

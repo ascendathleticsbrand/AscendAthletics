@@ -5,6 +5,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getPublicCatalog } from '@/lib/catalog';
 import { ProductCard } from '@/components/store/product-card';
 import { Newsletter } from '@/components/store/newsletter';
@@ -54,9 +55,13 @@ export default async function Collection({ params }: { params: Promise<{ slug: s
       </div>
       <section className="container page-body">
         {c.banner_path && (
-          <img
+          <Image
             src={c.banner_path}
             alt={c.name}
+            width={1600}
+            height={900}
+            sizes="100vw"
+            quality={85}
             style={{ width: '100%', maxHeight: 450, objectFit: 'cover', marginBottom: 35 }}
           />
         )}

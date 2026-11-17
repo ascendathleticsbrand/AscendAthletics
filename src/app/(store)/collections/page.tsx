@@ -3,6 +3,7 @@
  * When no collection is available, the existing empty state links customers back to the shop.
  */
 import Link from 'next/link';
+import Image from 'next/image';
 import { Layers, ArrowUpRight } from 'lucide-react';
 import { getPublicCatalog } from '@/lib/catalog';
 import { businessDate } from '@/lib/format';
@@ -24,7 +25,16 @@ export default async function Collections() {
         {catalog.collections.length ? (
           catalog.collections.map((c: any) => (
             <Link className="collection-card" key={c.id} href={`/collections/${c.slug}`}>
-              {c.banner_path && <img src={c.banner_path} alt={c.name} />}
+              {c.banner_path && (
+                <Image
+                  src={c.banner_path}
+                  alt={c.name}
+                  width={1600}
+                  height={900}
+                  sizes="(max-width: 760px) 100vw, 70vw"
+                  quality={85}
+                />
+              )}
               <span className="eyebrow">
                 {c.status === 'upcoming' ? 'UPCOMING DROP' : 'THE COLLECTION'}
                 {c.launch_at ? ` · ${businessDate(c.launch_at)}` : ''}

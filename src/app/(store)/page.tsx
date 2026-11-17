@@ -3,6 +3,7 @@
  * Catalog availability supplies the optional collections link; new stock does not replace the category cards.
  */
 import { BrandLogo } from '@/components/brand-logo';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowUpRight,
@@ -28,10 +29,13 @@ export default async function Home() {
     <>
       {/* Brand introduction: official wordmark, headline and the existing editorial background. */}
       <section className="hero">
-        <img
+        <Image
           className="hero-photo"
           src="/images/ascend-home-hero.jpg"
           alt="Strength training in the gym"
+          fill
+          sizes="100vw"
+          quality={85}
           fetchPriority="high"
         />
         <div className="container hero-inner">
@@ -145,10 +149,12 @@ export default async function Home() {
       {/* Coaching introduction uses the published coach content when it is available. */}
       <section className="split-editorial">
         <div className="editorial-image">
-          <img
+          <Image
             src={bio?.image_path || '/images/gym-editorial.jpg'}
             alt={bio?.image_path ? 'ASCEND coaching' : 'Editorial gym training space'}
-            loading="lazy"
+            fill
+            sizes="(max-width: 760px) 100vw, 50vw"
+            quality={85}
           />
           <span className="image-label">DISCIPLINE. DIRECTION. PROGRESS.</span>
           {!bio?.image_path && (

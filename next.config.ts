@@ -4,7 +4,16 @@ const config: NextConfig = {
   poweredByHeader: false,
   // Limit parallel build workers on development machines with constrained memory.
   experimental: { cpus: 2, agentUpgrade: 'security' },
-  images: { remotePatterns: [{ protocol: 'https', hostname: '**.supabase.co' }] },
+  images: {
+    qualities: [75, 85],
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.supabase.co' },
+      {
+        protocol: 'https',
+        hostname: 'pub-ce34609096ed4ef3a803b802b02c92b6.r2.dev',
+      },
+    ],
+  },
   async headers() {
     const headers = [
       { key: 'X-Content-Type-Options', value: 'nosniff' },

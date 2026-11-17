@@ -3,6 +3,7 @@
  * The availability badge requires a variant with confirmed opening stock and a positive available quantity.
  */
 import Link from 'next/link';
+import Image from 'next/image';
 import { Shirt } from 'lucide-react';
 import type { Product } from '@/lib/backend/types';
 import { money } from '@/lib/format';
@@ -14,7 +15,13 @@ export function ProductCard({ product }: { product: Product }) {
     <Link href={`/shop/${product.slug}`} className="product-card">
       <div className="product-image">
         {product.images[0] ? (
-          <img src={product.images[0]} alt={product.name} loading="lazy" />
+          <Image
+            src={product.images[0]}
+            alt={product.name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1000px) 50vw, 33vw"
+            quality={85}
+          />
         ) : (
           <Shirt size={90} strokeWidth={0.6} />
         )}

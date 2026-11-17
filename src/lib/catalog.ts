@@ -111,7 +111,12 @@ export async function getPublicContent(): Promise<Record<string, Row>> {
   );
 }
 export async function getBusinessSettings(): Promise<PublicSettings> {
-  const fallback = { whatsapp_number: '2349130607719', contact_phone: '+234 913 060 7719' };
+  const fallback = {
+    whatsapp_number: '2349130607719',
+    contact_phone: '+234 913 060 7719',
+    pickup_location:
+      'Forge Gym, Noble Vine Plaza, NTA Road, beside Top Car, Mgbuoba, Port Harcourt 500102, Rivers State',
+  };
   if (!hasServiceConfig()) return fallback;
   // Read only the explicitly public columns. The owner-only settings row is never
   // exposed through a SECURITY DEFINER view in the PostgREST API schema.
@@ -121,5 +126,13 @@ export async function getBusinessSettings(): Promise<PublicSettings> {
     .eq('id', 1)
     .maybeSingle();
   if (error || !data) return fallback;
-  return { ...fallback, ...data, pickup_phone: data.pickup_contact };
+  return {
+    ...fallback,
+    ...data,
+    pickup_location:
+      typeof data.pickup_location === 'string' && data.pickup_location.trim()
+        ? data.pickup_location.trim()
+        : fallback.pickup_location,
+    pickup_phone: data.pickup_contact,
+  };
 }

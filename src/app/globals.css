@@ -774,6 +774,17 @@ img {
   width: 236px;
   margin-bottom: 15px;
 }
+.footer-top .footer-location {
+  max-width: 250px;
+  margin-bottom: 18px;
+  color: #a2a29a;
+}
+.footer-location strong {
+  color: var(--white);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 .footer-top p {
   font-size: 11px;
   line-height: 1.9;
@@ -885,6 +896,36 @@ textarea.field {
   font-size: 11px;
   color: var(--silver);
   margin-bottom: 8px;
+}
+.password-input-wrap {
+  display: block;
+  position: relative;
+}
+.password-input-wrap .field {
+  padding-right: 52px;
+}
+.password-visibility-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--silver);
+  cursor: pointer;
+}
+.password-visibility-toggle:hover,
+.password-visibility-toggle:focus-visible {
+  color: var(--gold);
+}
+.password-visibility-toggle:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
 .filters .search {
   flex: 1;

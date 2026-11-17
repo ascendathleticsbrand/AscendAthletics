@@ -5,6 +5,7 @@
  * These browser-side prices and quantities are checked again by the server when checkout creates an order.
  */
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShoppingBag, Minus, Plus, ArrowRight, Shirt, Trash2 } from 'lucide-react';
 import { useCart } from './cart-context';
 import { money } from '@/lib/format';
@@ -38,7 +39,7 @@ export function CartPage() {
         {items.map((i) => (
           <div className="cart-row" key={i.variant_id}>
             {i.image ? (
-              <img src={i.image} alt={i.name} />
+              <Image src={i.image} alt={i.name} width={120} height={150} quality={75} />
             ) : (
               <div className="cart-placeholder">
                 <Shirt size={30} />
