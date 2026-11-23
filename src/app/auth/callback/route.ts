@@ -8,6 +8,10 @@ export async function GET(request: Request) {
     base = process.env.NEXT_PUBLIC_SITE_URL || requestBaseOrigin(request),
     next = safeAuthNext(url.searchParams.get('next'));
   const code = url.searchParams.get('code');
+  const isOAuthError =
+    url.searchParams.has('error') ||
+    url.searchParams.has('error_code') ||
+    url.searchParams.has('error_description');
   if (code) {
     try {
       const { error } = await (await createClient()).auth.exchangeCodeForSession(code);
@@ -17,7 +21,7 @@ export async function GET(request: Request) {
     }
   }
   const failure = new URL('/account', base);
-  failure.searchParams.set('auth_error', 'confirmation_failed');
+  failure.searchParams.set('auth_error', isOAuthError ? 'oauth_failed' : 'confirmation_failed');
   failure.searchParams.set('next', next);
   return NextResponse.redirect(failure);
 }

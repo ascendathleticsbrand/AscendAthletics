@@ -149,6 +149,9 @@ img {
   letter-spacing: 0.04em;
 }
 .site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   height: 72px;
   padding: 0 56px;
   display: flex;

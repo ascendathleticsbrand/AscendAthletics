@@ -27,8 +27,9 @@ export default async function Account({
           </div>
           {(params.error || params.auth_error) && (
             <p className="notice">
-              The email confirmation link could not be verified. Please request a new link or sign
-              in.
+              {params.auth_error === 'oauth_failed'
+                ? 'Google sign-in could not be completed. Please try again or sign in with email.'
+                : 'The email confirmation link could not be verified. Please request a new link or sign in.'}
             </p>
           )}
           <AuthForm

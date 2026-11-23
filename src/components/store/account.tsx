@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowUpRight, Eye, EyeOff } from 'lucide-react';
+import { createClient as createBrowserSupabaseClient } from '@/lib/supabase/browser';
 import { api } from './request';
 import { money, businessDate, label, whatsapp } from '@/lib/format';
 import { safeInternalPath, secureOrderToken, embeddedInvoice } from './client-values';
@@ -28,6 +29,24 @@ export function AuthForm({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const signInWithGoogle = async () => {
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const supabase = createBrowserSupabaseClient();
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeInternalPath(next))}`,
+        },
+      });
+      if (oauthError) throw oauthError;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to start Google sign-in.');
+      setBusy(false);
+    }
+  };
   return (
     <div className="panel login-box">
       <div className="tabs">
@@ -60,6 +79,36 @@ export function AuthForm({
           training.
         </div>
       )}
+      <button
+        type="button"
+        className="button secondary"
+        style={{ width: '100%', marginBottom: 18 }}
+        disabled={busy || !configured}
+        onClick={signInWithGoogle}
+      >
+        <svg aria-hidden="true" viewBox="0 0 48 48" width="18" height="18">
+          <path
+            fill="#4285F4"
+            d="M48 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h13.47c-.59 3-2.26 5.48-4.74 7.18v5.97h7.68c4.5-4.15 7.09-10.26 7.09-17.62Z"
+          />
+          <path
+            fill="#34A853"
+            d="M24 48c6.48 0 11.92-2.14 15.9-5.83l-7.68-5.97c-2.13 1.43-4.86 2.28-8.22 2.28-6.31 0-11.65-4.26-13.55-9.98H2.51v6.16C6.48 42.2 14.6 48 24 48Z"
+          />
+          <path
+            fill="#FBBC05"
+            d="M10.45 28.5a14.4 14.4 0 0 1 0-9l-7.94-6.16a24 24 0 0 0 0 21.32l7.94-6.16Z"
+          />
+          <path
+            fill="#EA4335"
+            d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.6 0 6.48 5.8 2.51 13.34l7.94 6.16C12.35 13.76 17.69 9.5 24 9.5Z"
+          />
+        </svg>
+        Continue with Google
+      </button>
+      <p className="field-label" style={{ textAlign: 'center', marginBottom: 18 }}>
+        OR USE EMAIL
+      </p>
       <form
         onSubmit={async (e) => {
           e.preventDefault();

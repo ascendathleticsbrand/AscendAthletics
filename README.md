@@ -64,7 +64,7 @@ The current project is already connected, and **akgreat62@gmail.com** has ASCEND
 1. Create a Supabase development project, or use Docker Desktop plus the Supabase CLI for a disposable local stack.
 2. Apply every migration in filename order. See [Supabase instructions](supabase/README.md); never reset a production database.
 3. Enter the Supabase URL, anon key and server-only service-role key in `.env.local`.
-4. Configure Auth's site URL and `/auth/callback` redirect URLs for your actual origin. Enable email confirmation. For real signup email delivery, configure an approved sending provider in Supabase Auth; the application's Resend key does not automatically configure Auth mail.
+4. Configure Auth's site URL and `/auth/callback` redirect URLs for your actual origin. Enable email confirmation. For Google sign-in, create a Google OAuth web client, add Supabase's callback URL as an authorized redirect URI in Google Cloud, then enable Google and enter its client ID and secret in Supabase Auth providers. For real signup email delivery, configure an approved sending provider in Supabase Auth; the application's Resend key does not automatically configure Auth mail.
 5. Register and verify the real owner's account, then execute the guarded first-owner bootstrap SQL in `supabase/README.md`. Subsequent staff are managed by that owner.
 6. Verify the product-images public bucket and payment-proofs private bucket policies using the real Storage service. Service credentials must never use the NEXT_PUBLIC_ prefix.
 
