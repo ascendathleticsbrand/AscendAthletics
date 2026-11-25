@@ -1,5 +1,5 @@
 /** Shared HTML shell, page metadata and the customer cart provider. */
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { CartProvider } from '@/components/store/cart-context';
 import { connection } from 'next/server';
@@ -31,6 +31,10 @@ export const metadata: Metadata = {
     index: process.env.LAUNCH_READY === 'true',
     follow: process.env.LAUNCH_READY === 'true',
   },
+};
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // A per-request CSP nonce cannot be safely attached to a build-time static page.
